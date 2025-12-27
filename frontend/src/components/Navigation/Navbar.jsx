@@ -1,0 +1,122 @@
+import { useState } from 'react'
+
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <a href="#" className="text-2xl font-bold text-brand">
+              ParkEase
+            </a>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex md:items-center md:space-x-8 md:flex-1 md:justify-center">
+            <a href="#home" className="text-gray-700 hover:text-brand transition-colors">
+              Home
+            </a>
+            <a href="#features" className="text-gray-700 hover:text-brand transition-colors">
+              Features
+            </a>
+            <a href="#how-it-works" className="text-gray-700 hover:text-brand transition-colors">
+              How It Works
+            </a>
+            <a href="#about" className="text-gray-700 hover:text-brand transition-colors">
+              About
+            </a>
+          </div>
+
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex md:items-center md:space-x-4">
+            <button className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
+              Login
+            </button>
+            <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
+              Sign Up
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="text-gray-700 hover:text-brand focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {isMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+              <a
+                href="#home"
+                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                onClick={toggleMenu}
+              >
+                Home
+              </a>
+              <a
+                href="#features"
+                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                onClick={toggleMenu}
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                onClick={toggleMenu}
+              >
+                How It Works
+              </a>
+              <a
+                href="#about"
+                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                onClick={toggleMenu}
+              >
+                About
+              </a>
+              <div className="pt-4 space-y-2">
+                <button className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md">
+                  Login
+                </button>
+                <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  )
+}
+
+export default Navbar
+
