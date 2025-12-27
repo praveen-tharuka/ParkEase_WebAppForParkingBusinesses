@@ -1,10 +1,25 @@
 import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { mockUser } from '../../data/mockUserData'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { isAuthenticated, login } = useAuth()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  // Check if we're on the landing page for hash link navigation
+  const isLandingPage = location.pathname === '/'
+
+  const handleLogin = () => {
+    // Mock login - in real app, this would be an API call
+    login(mockUser)
+    navigate('/dashboard')
   }
 
   return (
@@ -13,35 +28,62 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a href="#" className="text-2xl font-bold text-brand">
+            <Link to="/" className="text-2xl font-bold text-brand">
               ParkEase
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex md:items-center md:space-x-8 md:flex-1 md:justify-center">
-            <a href="#home" className="text-gray-700 hover:text-brand transition-colors">
-              Home
-            </a>
-            <a href="#features" className="text-gray-700 hover:text-brand transition-colors">
-              Features
-            </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-brand transition-colors">
-              How It Works
-            </a>
-            <a href="#about" className="text-gray-700 hover:text-brand transition-colors">
-              About
-            </a>
+            {isLandingPage ? (
+              <>
+                <a href="#home" className="text-gray-700 hover:text-brand transition-colors">
+                  Home
+                </a>
+                <a href="#features" className="text-gray-700 hover:text-brand transition-colors">
+                  Features
+                </a>
+                <a href="#how-it-works" className="text-gray-700 hover:text-brand transition-colors">
+                  How It Works
+                </a>
+                <a href="#about" className="text-gray-700 hover:text-brand transition-colors">
+                  About
+                </a>
+              </>
+            ) : (
+              <>
+                <Link to="/" className="text-gray-700 hover:text-brand transition-colors">
+                  Home
+                </Link>
+                <Link to="/search" className="text-gray-700 hover:text-brand transition-colors">
+                  Find Parking
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <button className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
-              Login
-            </button>
-            <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
-              Sign Up
-            </button>
+            {isAuthenticated ? (
+              <Link
+                to="/dashboard"
+                className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={handleLogin}
+                  className="px-4 py-2 text-gray-700 hover:text-brand transition-colors"
+                >
+                  Login
+                </button>
+                <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,41 +116,80 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
-              <a
-                href="#home"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                Home
-              </a>
-              <a
-                href="#features"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                How It Works
-              </a>
-              <a
-                href="#about"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                About
-              </a>
+              {isLandingPage ? (
+                <>
+                  <a
+                    href="#home"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Home
+                  </a>
+                  <a
+                    href="#features"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Features
+                  </a>
+                  <a
+                    href="#how-it-works"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    How It Works
+                  </a>
+                  <a
+                    href="#about"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    About
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/search"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Find Parking
+                  </Link>
+                </>
+              )}
               <div className="pt-4 space-y-2">
-                <button className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md">
-                  Login
-                </button>
-                <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
-                  Sign Up
-                </button>
+                {isAuthenticated ? (
+                  <Link
+                    to="/dashboard"
+                    className="block w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 text-center"
+                    onClick={toggleMenu}
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleLogin()
+                        toggleMenu()
+                      }}
+                      className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md"
+                    >
+                      Login
+                    </button>
+                    <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
+                      Sign Up
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
