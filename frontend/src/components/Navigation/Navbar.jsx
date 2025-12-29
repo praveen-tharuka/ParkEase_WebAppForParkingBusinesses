@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -13,9 +14,9 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a href="#" className="text-2xl font-bold text-brand">
+            <Link to="/" className="text-2xl font-bold text-brand">
               ParkEase
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
@@ -36,12 +37,12 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <button className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
+            <Link to="/login" className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
               Login
-            </button>
-            <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
+            </Link>
+            <Link to="/signup" className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
               Sign Up
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -103,12 +104,20 @@ const Navbar = () => {
                 About
               </a>
               <div className="pt-4 space-y-2">
-                <button className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md">
+                <Link 
+                  to="/login"
+                  className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md block"
+                  onClick={toggleMenu}
+                >
                   Login
-                </button>
-                <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
+                </Link>
+                <Link 
+                  to="/signup"
+                  className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 block text-center"
+                  onClick={toggleMenu}
+                >
                   Sign Up
-                </button>
+                </Link>
               </div>
             </div>
           </div>
