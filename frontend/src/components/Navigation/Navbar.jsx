@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { mockUser } from '../../data/mockUserData'
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -64,26 +62,12 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {isAuthenticated ? (
-              <Link
-                to="/dashboard"
-                className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <button
-                  onClick={handleLogin}
-                  className="px-4 py-2 text-gray-700 hover:text-brand transition-colors"
-                >
-                  Login
-                </button>
-                <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                  Sign Up
-                </button>
-              </>
-            )}
+            <Link to="/login" className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
+              Login
+            </Link>
+            <Link to="/signup" className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
+              Sign Up
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -166,30 +150,20 @@ const Navbar = () => {
                 </>
               )}
               <div className="pt-4 space-y-2">
-                {isAuthenticated ? (
-                  <Link
-                    to="/dashboard"
-                    className="block w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 text-center"
-                    onClick={toggleMenu}
-                  >
-                    Dashboard
-                  </Link>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        handleLogin()
-                        toggleMenu()
-                      }}
-                      className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md"
-                    >
-                      Login
-                    </button>
-                    <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
-                      Sign Up
-                    </button>
-                  </>
-                )}
+                <Link 
+                  to="/login"
+                  className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md block"
+                  onClick={toggleMenu}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/signup"
+                  className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 block text-center"
+                  onClick={toggleMenu}
+                >
+                  Sign Up
+                </Link>
               </div>
             </div>
           </div>

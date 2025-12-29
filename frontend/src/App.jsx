@@ -1,64 +1,31 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
 import LandingPage from './pages/LandingPage'
-import SearchPage from './pages/SearchPage'
-import DashboardPage from './pages/DashboardPage'
-import MyReservationsPage from './pages/MyReservationsPage'
-import MyProfilePage from './pages/MyProfilePage'
-import MyVehiclesPage from './pages/MyVehiclesPage'
-import SettingsPage from './pages/SettingsPage'
-import ProtectedRoute from './components/Auth/ProtectedRoute'
+import LoginPage from './pages/Auth/LoginPage'
+import SignupPage from './pages/Auth/SignupPage'
+import LoginSuccessPage from './pages/Auth/LoginSuccessPage'
+import SignupSuccessPage from './pages/Auth/SignupSuccessPage'
+import LoginErrorPage from './pages/Auth/LoginErrorPage'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route
-            path="/dashboard"
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route
+            path="/user-dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <UserDashboardPage />
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/dashboard/reservations"
-            element={
-              <ProtectedRoute>
-                <MyReservationsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/profile"
-            element={
-              <ProtectedRoute>
-                <MyProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/vehicles"
-            element={
-              <ProtectedRoute>
-                <MyVehiclesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/login-success" element={<LoginSuccessPage />} />
+        <Route path="/signup-success" element={<SignupSuccessPage />} />
+        <Route path="/login-error" element={<LoginErrorPage />} />
+      </Routes>
+    </Router>
   )
 }
 
