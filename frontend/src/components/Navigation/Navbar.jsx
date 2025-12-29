@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
-  const { isAuthenticated, login } = useAuth()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -13,12 +11,6 @@ const Navbar = () => {
 
   // Check if we're on the landing page for hash link navigation
   const isLandingPage = location.pathname === '/'
-
-  const handleLogin = () => {
-    // Mock login - in real app, this would be an API call
-    login(mockUser)
-    navigate('/dashboard')
-  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">

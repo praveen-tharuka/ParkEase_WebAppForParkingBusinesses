@@ -1,10 +1,17 @@
-// Mock user data
+// Mock user data with credentials
 export const mockUser = {
   id: 1,
   name: 'Praveen',
-  email: 'praveen@example.com',
+  email: 'praveen@parkease.com',
+  password: 'password123', // Password for login
   profilePicture: null, // Can be replaced with actual image URL
   phone: '+1 (555) 123-4567',
+}
+
+// Mock credentials for login
+export const MOCK_CREDENTIALS = {
+  email: 'praveen@parkease.com',
+  password: 'password123',
 }
 
 // Mock statistics for quick stats
