@@ -1,7 +1,7 @@
 import DashboardLayout from '../components/Dashboard/DashboardLayout'
 import QuickStats from '../components/Dashboard/QuickStats'
 
-const DashboardPage = () => {
+const UserDashboardPage = () => {
   return (
     <DashboardLayout>
       <div>
@@ -54,6 +54,6 @@ const DashboardPage = () => {
   )
 }
 
-export default DashboardPage
+export default UserDashboardPage
 
 
