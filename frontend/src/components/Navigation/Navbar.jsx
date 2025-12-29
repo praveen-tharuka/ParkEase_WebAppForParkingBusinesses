@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const location = useLocation()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
+
+  // Check if we're on the landing page for hash link navigation
+  const isLandingPage = location.pathname === '/'
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
@@ -21,18 +25,31 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex md:items-center md:space-x-8 md:flex-1 md:justify-center">
-            <a href="#home" className="text-gray-700 hover:text-brand transition-colors">
-              Home
-            </a>
-            <a href="#features" className="text-gray-700 hover:text-brand transition-colors">
-              Features
-            </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-brand transition-colors">
-              How It Works
-            </a>
-            <a href="#about" className="text-gray-700 hover:text-brand transition-colors">
-              About
-            </a>
+            {isLandingPage ? (
+              <>
+                <a href="#home" className="text-gray-700 hover:text-brand transition-colors">
+                  Home
+                </a>
+                <a href="#features" className="text-gray-700 hover:text-brand transition-colors">
+                  Features
+                </a>
+                <a href="#how-it-works" className="text-gray-700 hover:text-brand transition-colors">
+                  How It Works
+                </a>
+                <a href="#about" className="text-gray-700 hover:text-brand transition-colors">
+                  About
+                </a>
+              </>
+            ) : (
+              <>
+                <Link to="/" className="text-gray-700 hover:text-brand transition-colors">
+                  Home
+                </Link>
+                <Link to="/search" className="text-gray-700 hover:text-brand transition-colors">
+                  Find Parking
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -75,34 +92,55 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
-              <a
-                href="#home"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                Home
-              </a>
-              <a
-                href="#features"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                How It Works
-              </a>
-              <a
-                href="#about"
-                className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
-                onClick={toggleMenu}
-              >
-                About
-              </a>
+              {isLandingPage ? (
+                <>
+                  <a
+                    href="#home"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Home
+                  </a>
+                  <a
+                    href="#features"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Features
+                  </a>
+                  <a
+                    href="#how-it-works"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    How It Works
+                  </a>
+                  <a
+                    href="#about"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    About
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/search"
+                    className="block px-3 py-2 text-gray-700 hover:text-brand hover:bg-gray-50 rounded-md"
+                    onClick={toggleMenu}
+                  >
+                    Find Parking
+                  </Link>
+                </>
+              )}
               <div className="pt-4 space-y-2">
                 <Link 
                   to="/login"
