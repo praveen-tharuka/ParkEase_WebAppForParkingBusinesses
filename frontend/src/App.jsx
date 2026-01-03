@@ -8,6 +8,12 @@ import SignupSuccessPage from './pages/Auth/SignupSuccessPage'
 import LoginErrorPage from './pages/Auth/LoginErrorPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import UserDashboardPage from './pages/UserDashboardPage'
+import BookingSuccess from "./pages/BookingSuccess";
+import ReservationConfirm from "./pages/ReservationConfirm";
+import ReservationForm from "./pages/ReservationForm";
+
+
+
 
 function App() {
   return (
@@ -28,6 +34,12 @@ function App() {
           <Route path="/login-success" element={<LoginSuccessPage />} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/login-error" element={<LoginErrorPage />} />
+          <Route path="/reservation/success" element={<BookingSuccess />} />
+          <Route path="/reservation/confirm" element={<ReservationConfirm />} />
+          <Route path="/reservation/details" element={<ReservationForm />} />
+
+
+
         </Routes>
       </Router>
     </AuthProvider>
