@@ -8,9 +8,9 @@ import SignupSuccessPage from './pages/Auth/SignupSuccessPage'
 import LoginErrorPage from './pages/Auth/LoginErrorPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import UserDashboardPage from './pages/UserDashboardPage'
-import BookingSuccess from "./pages/BookingSuccess";
-import ReservationConfirm from "./pages/ReservationConfirm";
-import ReservationForm from "./pages/ReservationForm";
+import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
+import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
+import ReservationForm from "./pages/Reservation Flow/ReservationForm";
 
 
 
