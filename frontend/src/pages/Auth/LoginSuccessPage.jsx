@@ -1,9 +1,21 @@
+import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { mockUser } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
 const LoginSuccessPage = () => {
   const navigate = useNavigate()
+  const { login, isAuthenticated } = useAuth()
+
+  // Ensure user is authenticated when they reach this page
+  // This is a safety check in case they navigate directly
+  useEffect(() => {
+    if (!isAuthenticated) {
+      login(mockUser)
+    }
+  }, [isAuthenticated, login])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,7 +57,7 @@ const LoginSuccessPage = () => {
             </div>
 
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/user-dashboard')}
               className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
             >
               Go to Dashboard

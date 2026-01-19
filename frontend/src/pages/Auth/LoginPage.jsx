@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { mockUser, MOCK_CREDENTIALS } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
@@ -8,6 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
@@ -39,11 +42,15 @@ const LoginPage = () => {
       return
     }
 
-    const mockPassword = 'password123'
-    const mockEmail = 'user@parkease.com'
+    // Check against mock credentials
+    const emailMatch = email.toLowerCase().trim() === MOCK_CREDENTIALS.email.toLowerCase() || 
+                        email.toLowerCase().trim() === 'praveen'
+    const passwordMatch = password === MOCK_CREDENTIALS.password
 
-    if ((email === mockEmail || email === 'user') && password === mockPassword) {
-      navigate('/login-success')
+    if (emailMatch && passwordMatch) {
+      // Authenticate the user and navigate to dashboard
+      login(mockUser)
+      navigate('/user-dashboard')
     } else {
       navigate('/login-error')
     }
@@ -133,7 +140,8 @@ const LoginPage = () => {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
               <p className="font-semibold">Demo Credentials:</p>
-              <p>Email: user@parkease.com | Password: password123</p>
+              <p>Email: praveen@parkease.com | Password: password123</p>
+              <p className="mt-1 text-xs">Or use username: praveen</p>
             </div>
           </form>
 
