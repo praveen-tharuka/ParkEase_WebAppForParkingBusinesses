@@ -9,6 +9,11 @@ import LoginErrorPage from './pages/Auth/LoginErrorPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import UserDashboardPage from './pages/UserDashboardPage'
 
+import CustomerProfilePage from "./pages/Profile/CustomerProfilePage"
+import AccountSettingsPage from "./pages/Profile/AccountSettingsPage"
+import VehicleManagementPage from "./pages/Vehicles/VehicleManagementPage"
+import AddEditVehiclePage from "./pages/Vehicles/AddEditVehiclePage"
+
 function App() {
   return (
     <AuthProvider>
@@ -28,6 +33,12 @@ function App() {
           <Route path="/login-success" element={<LoginSuccessPage />} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/login-error" element={<LoginErrorPage />} />
+
+          <Route path="/profile" element={<ProtectedRoute><CustomerProfilePage /></ProtectedRoute>} />
+<Route path="/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+<Route path="/vehicles" element={<ProtectedRoute><VehicleManagementPage /></ProtectedRoute>} />
+<Route path="/vehicles/add" element={<ProtectedRoute><AddEditVehiclePage /></ProtectedRoute>} />
+<Route path="/vehicles/edit/:id" element={<ProtectedRoute><AddEditVehiclePage /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
