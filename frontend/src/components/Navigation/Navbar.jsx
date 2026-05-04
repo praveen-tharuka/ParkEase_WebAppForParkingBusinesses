@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -36,10 +38,10 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <button className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
+            <button onClick={() => navigate('/login')} className="px-4 py-2 text-gray-700 hover:text-brand transition-colors">
               Login
             </button>
-            <button className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
+            <button onClick={() => navigate('/signup')} className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90 transition-colors">
               Sign Up
             </button>
           </div>
@@ -103,10 +105,10 @@ const Navbar = () => {
                 About
               </a>
               <div className="pt-4 space-y-2">
-                <button className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md">
+                <button onClick={() => { navigate('/login'); toggleMenu(); }} className="w-full px-4 py-2 text-gray-700 hover:text-brand text-left rounded-md">
                   Login
                 </button>
-                <button className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
+                <button onClick={() => { navigate('/signup'); toggleMenu(); }} className="w-full px-4 py-2 bg-brand text-white rounded-lg hover:bg-opacity-90">
                   Sign Up
                 </button>
               </div>
