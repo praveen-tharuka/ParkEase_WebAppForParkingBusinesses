@@ -8,6 +8,7 @@ import SignupSuccessPage from './pages/Auth/SignupSuccessPage'
 import LoginErrorPage from './pages/Auth/LoginErrorPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import UserDashboardPage from './pages/UserDashboardPage'
+import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
@@ -26,6 +27,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboardPage />
               </ProtectedRoute>
             }
           />
