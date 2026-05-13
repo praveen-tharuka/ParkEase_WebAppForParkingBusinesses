@@ -56,3 +56,5 @@ Run the development server:
 ```bash
 npm run dev
 ```
+
+The application will start on `http://localhost:5173` (or another port if 5173 is occupied).

@@ -11,7 +11,6 @@ import UserDashboardPage from './pages/UserDashboardPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
-import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 
 
 
@@ -39,7 +38,7 @@ function App() {
           <Route path="/reservation/confirm" element={<ReservationConfirm />} />
           <Route path="/reservation/details" element={<ReservationForm />} />
 
-          <Route path="/admin-dashboard/*" element={<AdminDashboardPage />} />
+
 
         </Routes>
       </Router>
