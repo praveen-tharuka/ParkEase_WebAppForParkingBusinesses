@@ -43,6 +43,38 @@ function App() {
           <Route path="/reservation/confirm" element={<ReservationConfirm />} />
           <Route path="/reservation/details" element={<ReservationForm />} />
           <Route path="/my-reservations" element={<MyReservations />} />
+          <Route
+            path="/dashboard/reservations"
+            element={
+              <ProtectedRoute>
+                <MyReservations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id"
+            element={
+              <ProtectedRoute>
+                <ReservationDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditReservation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id/ticket"
+            element={
+              <ProtectedRoute>
+                <DigitalTicket />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/reservation" element={<ReservationDetails />} />
           <Route path="/reservation/edit" element={<EditReservation />} />
           <Route path="/digital-ticket" element={<DigitalTicket />} />
