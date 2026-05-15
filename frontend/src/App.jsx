@@ -12,6 +12,7 @@ import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
+import ParkingSearch from "./pages/Reservation Flow/ParkingSearch";
 import MyReservations from "./pages/Reservations/MyReservations";
 import ReservationDetails from "./pages/Reservations/ReservationDetails";
 import EditReservation from "./pages/Reservations/EditReservation";
@@ -48,6 +49,7 @@ function App() {
           <Route path="/login-success" element={<LoginSuccessPage />} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/login-error" element={<LoginErrorPage />} />
+          <Route path="/reservation/search" element={<ParkingSearch />} />
           <Route path="/reservation/success" element={<BookingSuccess />} />
           <Route path="/reservation/confirm" element={<ReservationConfirm />} />
           <Route path="/reservation/details" element={<ReservationForm />} />

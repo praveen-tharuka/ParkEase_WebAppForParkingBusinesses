@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/Dashboard/DashboardLayout'
 import QuickStats from '../components/Dashboard/QuickStats'
 
@@ -6,6 +7,17 @@ const UserDashboardPage = () => {
     <DashboardLayout>
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-gray-600 max-w-2xl">
+            Find and reserve a parking slot quickly from your dashboard.
+          </p>
+          <Link
+            to="/reservation/search"
+            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold"
+          >
+            Find Parking
+          </Link>
+        </div>
         <QuickStats />
 
         {/* Recent Activity Section */}
