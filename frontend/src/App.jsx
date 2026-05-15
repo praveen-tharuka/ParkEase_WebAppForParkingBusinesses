@@ -9,6 +9,10 @@ import LoginErrorPage from './pages/Auth/LoginErrorPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import UserDashboardPage from './pages/UserDashboardPage'
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
+import CustomerApprovalPage from './pages/Admin/Officer/CustomerApprovalPage'
+import CustomersListPage from './pages/Admin/Officer/CustomersListPage'
+import CustomerDetailsPage from './pages/Admin/Officer/CustomerDetailsPage'
+import VehicleManagementPage from './pages/Admin/Officer/VehicleManagementPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
@@ -42,6 +46,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/officer/customer-approvals"
+            element={
+              <ProtectedRoute>
+                <CustomerApprovalPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/officer/customers"
+            element={
+              <ProtectedRoute>
+                <CustomersListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/officer/customers/:customerId"
+            element={
+              <ProtectedRoute>
+                <CustomerDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/officer/vehicles"
+            element={
+              <ProtectedRoute>
+                <VehicleManagementPage />
               </ProtectedRoute>
             }
           />
