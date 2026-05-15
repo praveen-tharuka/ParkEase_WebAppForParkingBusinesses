@@ -11,6 +11,11 @@ import UserDashboardPage from './pages/UserDashboardPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
+import MyReservations from "./pages/Reservations/MyReservations";
+import ReservationDetails from "./pages/Reservations/ReservationDetails";
+import EditReservation from "./pages/Reservations/EditReservation";
+import DigitalTicket from "./pages/Reservations/DigitalTicket";
+
 
 
 
@@ -37,6 +42,42 @@ function App() {
           <Route path="/reservation/success" element={<BookingSuccess />} />
           <Route path="/reservation/confirm" element={<ReservationConfirm />} />
           <Route path="/reservation/details" element={<ReservationForm />} />
+          <Route path="/my-reservations" element={<MyReservations />} />
+          <Route
+            path="/dashboard/reservations"
+            element={
+              <ProtectedRoute>
+                <MyReservations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id"
+            element={
+              <ProtectedRoute>
+                <ReservationDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditReservation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/reservations/:id/ticket"
+            element={
+              <ProtectedRoute>
+                <DigitalTicket />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/reservation" element={<ReservationDetails />} />
+          <Route path="/reservation/edit" element={<EditReservation />} />
+          <Route path="/digital-ticket" element={<DigitalTicket />} />
 
 
 
