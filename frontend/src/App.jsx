@@ -13,6 +13,7 @@ import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
 import ParkingSearch from "./pages/Reservation Flow/ParkingSearch";
+import MyVehiclesPage from './pages/MyVehiclesPage'
 import MyReservations from "./pages/Reservations/MyReservations";
 import ReservationDetails from "./pages/Reservations/ReservationDetails";
 import EditReservation from "./pages/Reservations/EditReservation";
@@ -83,6 +84,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DigitalTicket />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/vehicles"
+            element={
+              <ProtectedRoute>
+                <MyVehiclesPage />
               </ProtectedRoute>
             }
           />
