@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import AdminDashboardLayout from '../../components/Admin/AdminDashboardLayout'
-import WalkInRegistration from '../../components/Admin/WalkInRegistration'
 
 const AdminDashboardPage = () => {
   return (
@@ -49,9 +48,6 @@ const AdminDashboardPage = () => {
             to="/admin-dashboard/officer/vehicles"
           />
         </div>
-
-        {/* Walk-in Registration Form */}
-        <WalkInRegistration />
       </div>
     </AdminDashboardLayout>
   )

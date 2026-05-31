@@ -13,6 +13,9 @@ import CustomerApprovalPage from './pages/Admin/Officer/CustomerApprovalPage'
 import CustomersListPage from './pages/Admin/Officer/CustomersListPage'
 import CustomerDetailsPage from './pages/Admin/Officer/CustomerDetailsPage'
 import VehicleManagementPage from './pages/Admin/Officer/VehicleManagementPage'
+import ManageBookingsPage from './pages/Admin/ManageBookingsPage'
+import ManageSlotsPage from './pages/Admin/ManageSlotsPage'
+import AdminSettingsPage from './pages/Admin/AdminSettingsPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
@@ -81,6 +84,30 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin-dashboard/bookings"
+            element={
+              <ProtectedRoute>
+                <ManageBookingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/slots"
+            element={
+              <ProtectedRoute>
+                <ManageSlotsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettingsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login-success" element={<LoginSuccessPage />} />
@@ -131,12 +158,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/reservation" element={<ReservationDetails />} />
-          <Route path="/reservation/edit" element={<EditReservation />} />
-          <Route path="/digital-ticket" element={<DigitalTicket />} />
-
-
-
         </Routes>
       </Router>
     </AuthProvider>
