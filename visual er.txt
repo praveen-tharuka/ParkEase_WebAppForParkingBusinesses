@@ -1,0 +1,438 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px'}, 'flowchart': { 'nodeSpacing': 30, 'rankSpacing': 80, 'curve': 'basis' }}}%%
+flowchart LR
+    %% =====================================================
+    %% ParkEase Web App - Visual ER Diagram (Chen Notation)
+    %% Rectangles = Entities, Ovals = Attributes, Diamonds = Relationships
+    %% =====================================================
+
+    %% ===== CUSTOMER ENTITY =====
+    subgraph CUSTOMER_SECTION [" "]
+        direction LR
+        CUSTOMER["CUSTOMER"]
+        
+        c_id(["customer_id (PK)"])
+        c_user(["username"])
+        c_pass(["password"])
+        c_email(["email"])
+        c_phone(["phone"])
+        c_name(["full_name"])
+        c_reg(["registration_date"])
+        c_type(["customer_type"])
+        c_active(["is_active"])
+        
+        c_id --- CUSTOMER
+        c_user --- CUSTOMER
+        c_pass --- CUSTOMER
+        c_email --- CUSTOMER
+        c_phone --- CUSTOMER
+        c_name --- CUSTOMER
+        c_reg --- CUSTOMER
+        c_type --- CUSTOMER
+        c_active --- CUSTOMER
+    end
+
+    %% ===== ADMIN ENTITY =====
+    subgraph ADMIN_SECTION [" "]
+        direction LR
+        ADMIN["ADMIN"]
+        
+        a_id(["admin_id (PK)"])
+        a_user(["username"])
+        a_pass(["password"])
+        a_email(["email"])
+        a_name(["full_name"])
+        a_role(["role"])
+        a_created(["created_date"])
+        a_active(["is_active"])
+        
+        a_id --- ADMIN
+        a_user --- ADMIN
+        a_pass --- ADMIN
+        a_email --- ADMIN
+        a_name --- ADMIN
+        a_role --- ADMIN
+        a_created --- ADMIN
+        a_active --- ADMIN
+    end
+
+    %% ===== PARKING OFFICER ENTITY =====
+    subgraph OFFICER_SECTION [" "]
+        direction LR
+        PARKING_OFFICER["PARKING_OFFICER"]
+        
+        o_id(["officer_id (PK)"])
+        o_user(["username"])
+        o_pass(["password"])
+        o_name(["full_name"])
+        o_contact(["contact"])
+        o_reg(["registered_date"])
+        o_active(["is_active"])
+        
+        o_id --- PARKING_OFFICER
+        o_user --- PARKING_OFFICER
+        o_pass --- PARKING_OFFICER
+        o_name --- PARKING_OFFICER
+        o_contact --- PARKING_OFFICER
+        o_reg --- PARKING_OFFICER
+        o_active --- PARKING_OFFICER
+    end
+
+    %% ===== PARKING SLOT ENTITY =====
+    subgraph SLOT_SECTION [" "]
+        direction LR
+        PARKING_SLOT["PARKING_SLOT"]
+        
+        s_id(["slot_id (PK)"])
+        s_num(["slot_number"])
+        s_type(["slot_type"])
+        s_loc(["location"])
+        s_status(["status"])
+        s_created(["created_at"])
+        s_modified(["last_modified"])
+        
+        s_id --- PARKING_SLOT
+        s_num --- PARKING_SLOT
+        s_type --- PARKING_SLOT
+        s_loc --- PARKING_SLOT
+        s_status --- PARKING_SLOT
+        s_created --- PARKING_SLOT
+        s_modified --- PARKING_SLOT
+    end
+
+    %% ===== VEHICLE TYPE ENTITY =====
+    subgraph VTYPE_SECTION [" "]
+        direction LR
+        VEHICLE_TYPE["VEHICLE_TYPE"]
+        
+        vt_id(["vehicle_type_id (PK)"])
+        vt_name(["type_name"])
+        vt_desc(["description"])
+        vt_created(["created_at"])
+        vt_active(["is_active"])
+        
+        vt_id --- VEHICLE_TYPE
+        vt_name --- VEHICLE_TYPE
+        vt_desc --- VEHICLE_TYPE
+        vt_created --- VEHICLE_TYPE
+        vt_active --- VEHICLE_TYPE
+    end
+
+    %% ===== VEHICLE ENTITY =====
+    subgraph VEHICLE_SECTION [" "]
+        direction LR
+        VEHICLE["VEHICLE"]
+        
+        v_id(["vehicle_id (PK)"])
+        v_num(["vehicle_number"])
+        v_owner(["owner_name"])
+        v_contact(["contact"])
+        v_reg(["registered_date"])
+        v_active(["is_active"])
+        
+        v_id --- VEHICLE
+        v_num --- VEHICLE
+        v_owner --- VEHICLE
+        v_contact --- VEHICLE
+        v_reg --- VEHICLE
+        v_active --- VEHICLE
+    end
+
+    %% ===== RESERVATION ENTITY =====
+    subgraph RES_SECTION [" "]
+        direction LR
+        RESERVATION["RESERVATION"]
+        
+        r_id(["reservation_id (PK)"])
+        r_date(["reservation_date"])
+        r_start(["start_time"])
+        r_end(["end_time"])
+        r_status(["status"])
+        r_base(["base_fee"])
+        r_mod(["modification_fee"])
+        r_cancel(["cancellation_fee"])
+        r_total(["total_fee"])
+        r_created(["created_at"])
+        r_reason(["cancellation_reason"])
+        
+        r_id --- RESERVATION
+        r_date --- RESERVATION
+        r_start --- RESERVATION
+        r_end --- RESERVATION
+        r_status --- RESERVATION
+        r_base --- RESERVATION
+        r_mod --- RESERVATION
+        r_cancel --- RESERVATION
+        r_total --- RESERVATION
+        r_created --- RESERVATION
+        r_reason --- RESERVATION
+    end
+
+    %% ===== PARKING TICKET ENTITY =====
+    subgraph TICKET_SECTION [" "]
+        direction LR
+        PARKING_TICKET["PARKING_TICKET"]
+        
+        t_id(["ticket_id (PK)"])
+        t_num(["ticket_number"])
+        t_barcode(["ticket_barcode"])
+        t_alloc(["allocation_type"])
+        t_checkin(["check_in_time"])
+        t_checkout(["check_out_time"])
+        t_fee(["parking_fee"])
+        t_total(["total_fee"])
+        t_status(["status"])
+        t_printed(["is_printed"])
+        
+        t_id --- PARKING_TICKET
+        t_num --- PARKING_TICKET
+        t_barcode --- PARKING_TICKET
+        t_alloc --- PARKING_TICKET
+        t_checkin --- PARKING_TICKET
+        t_checkout --- PARKING_TICKET
+        t_fee --- PARKING_TICKET
+        t_total --- PARKING_TICKET
+        t_status --- PARKING_TICKET
+        t_printed --- PARKING_TICKET
+    end
+
+    %% ===== PAYMENT ENTITY =====
+    subgraph PAY_SECTION [" "]
+        direction LR
+        PAYMENT["PAYMENT"]
+        
+        p_id(["payment_id (PK)"])
+        p_ref(["payment_reference"])
+        p_amount(["total_amount"])
+        p_method(["payment_method"])
+        p_date(["payment_date"])
+        p_status(["payment_status"])
+        
+        p_id --- PAYMENT
+        p_ref --- PAYMENT
+        p_amount --- PAYMENT
+        p_method --- PAYMENT
+        p_date --- PAYMENT
+        p_status --- PAYMENT
+    end
+
+    %% ===== RECEIPT ENTITY =====
+    subgraph RECEIPT_SECTION [" "]
+        direction LR
+        RECEIPT["RECEIPT"]
+        
+        rc_id(["receipt_id (PK)"])
+        rc_num(["receipt_number"])
+        rc_date(["generated_date"])
+        rc_amount(["amount_paid"])
+        rc_method(["payment_method"])
+        
+        rc_id --- RECEIPT
+        rc_num --- RECEIPT
+        rc_date --- RECEIPT
+        rc_amount --- RECEIPT
+        rc_method --- RECEIPT
+    end
+
+    %% ===== FEE STRUCTURE ENTITY =====
+    subgraph FEE_SECTION [" "]
+        direction LR
+        FEE_STRUCTURE["FEE_STRUCTURE"]
+        
+        f_id(["fee_id (PK)"])
+        f_slot(["slot_type"])
+        f_hourly(["hourly_rate"])
+        f_daily(["daily_rate"])
+        f_mod(["modification_fee"])
+        f_cancel(["cancellation_fee_%"])
+        f_from(["effective_from"])
+        f_to(["effective_to"])
+        f_active(["is_active"])
+        
+        f_id --- FEE_STRUCTURE
+        f_slot --- FEE_STRUCTURE
+        f_hourly --- FEE_STRUCTURE
+        f_daily --- FEE_STRUCTURE
+        f_mod --- FEE_STRUCTURE
+        f_cancel --- FEE_STRUCTURE
+        f_from --- FEE_STRUCTURE
+        f_to --- FEE_STRUCTURE
+        f_active --- FEE_STRUCTURE
+    end
+
+    %% ===== REPORT ENTITY =====
+    subgraph REPORT_SECTION [" "]
+        direction LR
+        REPORT["REPORT"]
+        
+        rp_id(["report_id (PK)"])
+        rp_type(["report_type"])
+        rp_gen(["generated_date"])
+        rp_start(["report_start_date"])
+        rp_end(["report_end_date"])
+        rp_format(["report_format"])
+        rp_path(["report_file_path"])
+        
+        rp_id --- REPORT
+        rp_type --- REPORT
+        rp_gen --- REPORT
+        rp_start --- REPORT
+        rp_end --- REPORT
+        rp_format --- REPORT
+        rp_path --- REPORT
+    end
+
+    %% ===== STAFF ACCOUNT ENTITY =====
+    subgraph STAFF_SECTION [" "]
+        direction LR
+        STAFF_ACCOUNT["STAFF_ACCOUNT"]
+        
+        sa_id(["account_id (PK)"])
+        sa_type(["account_type"])
+        sa_ref(["reference_id"])
+        sa_created(["created_date"])
+        sa_updated(["updated_date"])
+        sa_active(["is_active"])
+        
+        sa_id --- STAFF_ACCOUNT
+        sa_type --- STAFF_ACCOUNT
+        sa_ref --- STAFF_ACCOUNT
+        sa_created --- STAFF_ACCOUNT
+        sa_updated --- STAFF_ACCOUNT
+        sa_active --- STAFF_ACCOUNT
+    end
+
+    %% ===== RELATIONSHIPS (DIAMONDS) =====
+    
+    %% Customer Relationships
+    MAKES{{"MAKES"}}
+    PROCESSES{{"PROCESSES"}}
+    OWNS{{"OWNS"}}
+    
+    CUSTOMER --- MAKES
+    MAKES --- RESERVATION
+    
+    CUSTOMER --- PROCESSES
+    PROCESSES --- PAYMENT
+    
+    CUSTOMER --- OWNS
+    OWNS --- VEHICLE
+
+    %% Admin Relationships
+    MANAGES_SLOT{{"MANAGES"}}
+    CONFIGURES{{"CONFIGURES"}}
+    GENERATES_RPT{{"GENERATES"}}
+    MANAGES_VTYPE{{"MANAGES"}}
+    MANAGES_ACCT{{"MANAGES"}}
+    
+    ADMIN --- MANAGES_SLOT
+    MANAGES_SLOT --- PARKING_SLOT
+    
+    ADMIN --- CONFIGURES
+    CONFIGURES --- FEE_STRUCTURE
+    
+    ADMIN --- GENERATES_RPT
+    GENERATES_RPT --- REPORT
+    
+    ADMIN --- MANAGES_VTYPE
+    MANAGES_VTYPE --- VEHICLE_TYPE
+    
+    ADMIN --- MANAGES_ACCT
+    MANAGES_ACCT --- STAFF_ACCOUNT
+
+    %% Parking Officer Relationships
+    GENERATES_TKT{{"GENERATES"}}
+    REGISTERS{{"REGISTERS"}}
+    ACCEPTS{{"ACCEPTS"}}
+    GENERATES_RCT{{"GENERATES"}}
+    
+    PARKING_OFFICER --- GENERATES_TKT
+    GENERATES_TKT --- PARKING_TICKET
+    
+    PARKING_OFFICER --- REGISTERS
+    REGISTERS --- VEHICLE
+    
+    PARKING_OFFICER --- ACCEPTS
+    ACCEPTS --- PAYMENT
+    
+    PARKING_OFFICER --- GENERATES_RCT
+    GENERATES_RCT --- RECEIPT
+
+    %% Slot-Reservation-Ticket Relationships
+    RESERVED_FOR{{"RESERVED_FOR"}}
+    ALLOCATED_TO{{"ALLOCATED_TO"}}
+    
+    PARKING_SLOT --- RESERVED_FOR
+    RESERVED_FOR --- RESERVATION
+    
+    PARKING_SLOT --- ALLOCATED_TO
+    ALLOCATED_TO --- PARKING_TICKET
+
+    %% Vehicle Relationships
+    BELONGS_TO{{"BELONGS_TO"}}
+    ISSUED_FOR{{"ISSUED_FOR"}}
+    
+    VEHICLE --- BELONGS_TO
+    BELONGS_TO --- VEHICLE_TYPE
+    
+    VEHICLE --- ISSUED_FOR
+    ISSUED_FOR --- PARKING_TICKET
+
+    %% Fee Structure Relationship
+    HAS_RATES{{"HAS_RATES"}}
+    VEHICLE_TYPE --- HAS_RATES
+    HAS_RATES --- FEE_STRUCTURE
+
+    %% Reservation to Ticket
+    CONVERTS_TO{{"CONVERTS_TO"}}
+    RESERVATION --- CONVERTS_TO
+    CONVERTS_TO --- PARKING_TICKET
+
+    %% Payment Relationships
+    REQUIRES{{"REQUIRES"}}
+    GENERATES_PAY{{"GENERATES"}}
+    
+    PARKING_TICKET --- REQUIRES
+    REQUIRES --- PAYMENT
+    
+    PAYMENT --- GENERATES_PAY
+    GENERATES_PAY --- RECEIPT
+
+    %% ===== STYLING =====
+    
+    %% Entity Rectangles - Blue
+    classDef entity fill:#4A90D9,stroke:#2E5A8B,stroke-width:3px,color:#fff,font-weight:bold
+    
+    %% Attribute Ovals - Light Green
+    classDef attribute fill:#90EE90,stroke:#228B22,stroke-width:1px,color:#000,font-size:10px
+    
+    %% Primary Key Attributes - Yellow
+    classDef pkAttribute fill:#FFD700,stroke:#B8860B,stroke-width:2px,color:#000,font-size:10px
+    
+    %% Relationship Diamonds - Orange
+    classDef relationship fill:#FFA500,stroke:#CC7000,stroke-width:2px,color:#000,font-weight:bold
+
+    %% Apply Entity Styles
+    class CUSTOMER,ADMIN,PARKING_OFFICER,PARKING_SLOT,VEHICLE,VEHICLE_TYPE,RESERVATION,PARKING_TICKET,PAYMENT,RECEIPT,FEE_STRUCTURE,REPORT,STAFF_ACCOUNT entity
+
+    %% Apply PK Attribute Styles
+    class c_id,a_id,o_id,s_id,v_id,vt_id,r_id,t_id,p_id,rc_id,f_id,rp_id,sa_id pkAttribute
+
+    %% Apply Regular Attribute Styles
+    class c_user,c_pass,c_email,c_phone,c_name,c_reg,c_type,c_active attribute
+    class a_user,a_pass,a_email,a_name,a_role,a_created,a_active attribute
+    class o_user,o_pass,o_name,o_contact,o_reg,o_active attribute
+    class s_num,s_type,s_loc,s_status,s_created,s_modified attribute
+    class v_num,v_owner,v_contact,v_reg,v_active attribute
+    class vt_name,vt_desc,vt_created,vt_active attribute
+    class r_date,r_start,r_end,r_status,r_base,r_mod,r_cancel,r_total,r_created,r_reason attribute
+    class t_num,t_barcode,t_alloc,t_checkin,t_checkout,t_fee,t_total,t_status,t_printed attribute
+    class p_ref,p_amount,p_method,p_date,p_status attribute
+    class rc_num,rc_date,rc_amount,rc_method attribute
+    class f_slot,f_hourly,f_daily,f_mod,f_cancel,f_from,f_to,f_active attribute
+    class rp_type,rp_gen,rp_start,rp_end,rp_format,rp_path attribute
+    class sa_type,sa_ref,sa_created,sa_updated,sa_active attribute
+
+    %% Apply Relationship Styles
+    class MAKES,PROCESSES,OWNS,MANAGES_SLOT,CONFIGURES,GENERATES_RPT,MANAGES_VTYPE,MANAGES_ACCT relationship
+    class GENERATES_TKT,REGISTERS,ACCEPTS,GENERATES_RCT,RESERVED_FOR,ALLOCATED_TO relationship
+    class BELONGS_TO,ISSUED_FOR,HAS_RATES,CONVERTS_TO,REQUIRES,GENERATES_PAY relationship
