@@ -1,17 +1,11 @@
-// Prisma v7 runtime config (CommonJS)
-// Supplies the datasource adapter and generator settings expected by Prisma CLI v7.
-module.exports = {
-  datasources: {
-    db: {
-      adapter: {
-        type: 'postgresql',
-        url: process.env.DATABASE_URL,
-      },
-    },
+const { defineConfig } = require('prisma/config');
+
+module.exports = defineConfig({
+  schema: 'prisma/schema.prisma',
+  datasource: {
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
   },
-  generators: {
-    client: {
-      provider: 'prisma-client-js',
-    },
+  migrations: {
+    seed: 'npx ts-node prisma/seed.ts',
   },
-};
+});
