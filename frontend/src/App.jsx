@@ -16,6 +16,8 @@ import VehicleManagementPage from './pages/Admin/Officer/VehicleManagementPage'
 import ManageBookingsPage from './pages/Admin/ManageBookingsPage'
 import ManageSlotsPage from './pages/Admin/ManageSlotsPage'
 import AdminSettingsPage from './pages/Admin/AdminSettingsPage'
+import WalkInRegistrationPage from './pages/Admin/WalkInRegistrationPage'
+import WalkInRegistrationListPage from './pages/Admin/WalkInRegistrationListPage'
 import BookingSuccess from "./pages/Reservation Flow/BookingSuccess";
 import ReservationConfirm from "./pages/Reservation Flow/ReservationConfirm";
 import ReservationForm from "./pages/Reservation Flow/ReservationForm";
@@ -105,6 +107,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/walk-in-registration"
+            element={
+              <ProtectedRoute>
+                <WalkInRegistrationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/walk-in-registrations"
+            element={
+              <ProtectedRoute>
+                <WalkInRegistrationListPage />
               </ProtectedRoute>
             }
           />
