@@ -439,6 +439,20 @@ export const walkinsAPI = {
       requiresAuth: true,
     })
   },
+
+  checkoutWalkIn: async (id) => {
+    return apiCall(`/walkins/${id}/checkout`, {
+      method: 'PATCH',
+      requiresAuth: true,
+    })
+  },
+
+  deleteWalkIn: async (id) => {
+    return apiCall(`/walkins/${id}`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    })
+  },
 }
 
 export default {

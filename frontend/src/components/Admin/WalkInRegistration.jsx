@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { mockSlots } from '../../data/mockSlots'
+import { useState, useEffect } from 'react'
+import api from '../../services/api'
+const { walkinsAPI, slotsAPI } = api
 
 const WalkInRegistration = () => {
   const [formData, setFormData] = useState({
@@ -11,10 +12,40 @@ const WalkInRegistration = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState('success')
+  const [slots, setSlots] = useState([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+
+  // Fetch available slots from backend database
+  useEffect(() => {
+    const fetchAvailableSlots = async () => {
+      setLoadingSlots(true)
+      try {
+        const response = await slotsAPI.searchSlots({ status: 'AVAILABLE' })
+        if (response.success && response.data) {
+          const rawSlots = Array.isArray(response.data)
+            ? response.data
+            : (response.data.data || [])
+          const mapped = rawSlots.map(s => ({
+            id: s.id,
+            slotNumber: s.slotNumber,
+            location: s.location?.name || 'Downtown',
+            type: s.supportedVehicleType?.name || 'Car',
+            available: s.status === 'AVAILABLE'
+          }))
+          setSlots(mapped)
+        }
+      } catch (err) {
+        console.error('Error fetching slots:', err)
+      } finally {
+        setLoadingSlots(false)
+      }
+    }
+    fetchAvailableSlots()
+  }, [formData.vehicleType])
 
   // Filter available slots by vehicle type
-  const availableSlots = mockSlots.filter(
-    slot => slot.available && slot.type === formData.vehicleType
+  const availableSlots = slots.filter(
+    slot => slot.type === formData.vehicleType
   )
 
   const handleChange = (e) => {
@@ -24,7 +55,7 @@ const WalkInRegistration = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     // Validate form
@@ -49,19 +80,39 @@ const WalkInRegistration = () => {
 
     setIsSubmitting(true)
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setMessageType('success')
-      setMessage('✓ Vehicle registered successfully! Slot assigned: ' + formData.slot)
-      setFormData({
-        licensePlate: '',
-        vehicleType: 'Car',
-        phoneNumber: '',
-        slot: ''
+    try {
+      const response = await walkinsAPI.createWalkIn({
+        licensePlate: formData.licensePlate.toUpperCase().trim(),
+        vehicleType: formData.vehicleType,
+        phoneNumber: formData.phoneNumber.trim(),
+        slotNumber: formData.slot
       })
-      setTimeout(() => setMessage(''), 4000)
-    }, 1000)
+
+      if (response.success) {
+        setMessageType('success')
+        setMessage('✓ Vehicle registered successfully! Slot assigned: ' + formData.slot)
+        
+        // Remove the newly occupied slot from local state immediately
+        setSlots(prev => prev.filter(s => s.slotNumber !== formData.slot))
+        
+        setFormData({
+          licensePlate: '',
+          vehicleType: 'Car',
+          phoneNumber: '',
+          slot: ''
+        })
+      } else {
+        setMessageType('error')
+        setMessage(response.error || 'Failed to register walk-in vehicle')
+      }
+    } catch (err) {
+      console.error('Walk-In Registration Error:', err)
+      setMessageType('error')
+      setMessage('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+      setTimeout(() => setMessage(''), 5000)
+    }
   }
 
   return (
