@@ -1,16 +1,44 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { mockSlots } from '../../data/mockSlots'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
+import { slotsAPI } from '../../services/api'
+// Keep mockSlots as a fallback during development
+import { mockSlots } from '../../data/mockSlots'
 
 const ParkingSearch = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('All')
   const [selectedSlot, setSelectedSlot] = useState(null)
+  // API state
+  const [slots, setSlots] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [apiError, setApiError] = useState(null)
 
-  const filteredSlots = mockSlots.filter(slot => {
+  useEffect(() => {
+    const fetchSlots = async () => {
+      setIsLoading(true)
+      setApiError(null)
+      try {
+        const response = await slotsAPI.searchSlots({}) // no filters initially
+        if (response.success) {
+          setSlots(response.data)
+        } else {
+          setApiError('Failed to load slots')
+          setSlots(mockSlots) // fallback to mock data
+        }
+      } catch (e) {
+        setApiError('Error contacting server')
+        setSlots(mockSlots)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchSlots()
+  }, [])
+
+  const filteredSlots = (slots.length ? slots : mockSlots).filter(slot => {
     const matchesSearch = slot.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          slot.slotNumber.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = vehicleTypeFilter === 'All' || slot.type === vehicleTypeFilter
@@ -29,6 +57,19 @@ const ParkingSearch = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {apiError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-4 mt-4">
+          {apiError}
+        </div>
+      )}
+      {isLoading && (
+        <div className="flex justify-center items-center mt-4">
+          <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+        </div>
+      )}
       <div className="flex-grow pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

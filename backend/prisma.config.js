@@ -1,12 +1,11 @@
-// Prisma v7 runtime config (CommonJS)
-const path = require('path');
+const { defineConfig } = require('prisma/config');
 
-module.exports = {
-  schema: path.join(__dirname, 'prisma', 'schema.prisma'),
+module.exports = defineConfig({
+  schema: 'prisma/schema.prisma',
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
   },
   migrations: {
-    seed: 'node prisma/seed.ts',
+    seed: 'npx ts-node prisma/seed.ts',
   },
-};
+});
