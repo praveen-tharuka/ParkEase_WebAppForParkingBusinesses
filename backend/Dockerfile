@@ -30,7 +30,7 @@ EXPOSE 3000
 
 # On startup: push schema to the database (idempotent) then launch the server.
 # Backend devs will replace the CMD once they scaffold the actual app entrypoint.
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node src/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node src/index.js"]
 
 # ---------- development (default target for docker compose) ----------
 FROM base AS development
@@ -42,4 +42,4 @@ RUN npx prisma generate
 EXPOSE 3000
 
 # In dev mode: push schema then start with a watcher (or plain node for now)
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node src/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node src/index.js"]
