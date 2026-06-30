@@ -28,24 +28,40 @@ const AdminDashboardPage = () => {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <QuickLinkCard
+            title="Walk-In Registration"
+            description="Register vehicles arriving without prior reservations."
+            to="/admin-dashboard/walk-in-registration"
+            icon="car"
+          />
+          <QuickLinkCard
+            title="Walk-In Registrations"
+            description="View and manage all active walk-in vehicle registrations."
+            to="/admin-dashboard/walk-in-registrations"
+            icon="list"
+          />
+          <QuickLinkCard
             title="Customer Approvals"
             description="Review pending registrations and approve new customers."
             to="/admin-dashboard/officer/customer-approvals"
+            icon="check"
           />
           <QuickLinkCard
             title="Customers"
             description="Search the full customer list with filters and statuses."
             to="/admin-dashboard/officer/customers"
+            icon="users"
           />
           <QuickLinkCard
             title="Customer Details"
             description="Open a customer profile, history, and linked vehicles."
             to="/admin-dashboard/officer/customers/CUS-1001"
+            icon="profile"
           />
           <QuickLinkCard
             title="Vehicle Management"
             description="Find vehicles fast and manage vehicle status updates."
             to="/admin-dashboard/officer/vehicles"
+            icon="vehicle"
           />
         </div>
       </div>
