@@ -1,12 +1,5 @@
-/**
- * Slots Service
- * Handles slot search, filtering, and real-time availability checks.
- */
 const prisma = require('../prismaClient');
 
-/**
- * List slots with optional filters: status, slotType, locationId
- */
 async function listSlots({ status, slotType, locationId }) {
   const where = {};
   if (status) where.status = status;
@@ -23,9 +16,6 @@ async function listSlots({ status, slotType, locationId }) {
   });
 }
 
-/**
- * Get a single slot by id
- */
 async function getSlotById(id) {
   return prisma.parkingSlot.findUnique({
     where: { id },
@@ -33,12 +23,7 @@ async function getSlotById(id) {
   });
 }
 
-/**
- * Find slots that are available for a given time range.
- * A slot is considered available if:
- *  - its status is not MAINTENANCE
- *  - it has no overlapping reservation with status PENDING, CONFIRMED, or CHECKED_IN
- */
+
 async function findAvailableSlots({ startTime, endTime, slotType, locationId, vehicleTypeId }) {
   if (!startTime || !endTime) {
     const err = new Error('startTime and endTime are required');

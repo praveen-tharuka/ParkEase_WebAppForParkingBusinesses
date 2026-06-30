@@ -1,7 +1,3 @@
-/**
- * Slots Controller
- * Handles HTTP request/response for slot endpoints.
- */
 const slotsService = require('./slots.service');
 
 async function getSlots(req, res) {

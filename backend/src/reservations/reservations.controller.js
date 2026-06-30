@@ -1,7 +1,3 @@
-/**
- * Reservations Controller
- * Handles HTTP request/response for reservation endpoints.
- */
 const reservationsService = require('./reservations.service');
 
 async function createReservation(req, res) {

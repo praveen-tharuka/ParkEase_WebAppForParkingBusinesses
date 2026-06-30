@@ -1,7 +1,3 @@
-/**
- * Reservations Service
- * Handles create / read / update / cancel + ticket (check-in/checkout) lifecycle.
- */
 const prisma = require('../prismaClient');
 
 function generateReservationCode() {

@@ -1,7 +1,3 @@
-/**
- * ParkEase Backend — Entrypoint
- * Express app wiring up the API routes.
- */
 const express = require('express');
 const slotsRoutes = require('./slots/slots.routes');
 const reservationsRoutes = require('./reservations/reservations.routes');
