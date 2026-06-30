@@ -6,12 +6,30 @@ export const mockUser = {
   password: 'password123', // Password for login
   profilePicture: null, // Can be replaced with actual image URL
   phone: '+1 (555) 123-4567',
+  role: 'user',
+}
+
+// Mock admin data
+export const mockAdmin = {
+  id: 101,
+  name: 'Admin User',
+  email: 'admin@parkease.com',
+  password: 'admin123', // Password for admin login
+  profilePicture: null,
+  phone: '+1 (555) 987-6543',
+  role: 'admin',
 }
 
 // Mock credentials for login
 export const MOCK_CREDENTIALS = {
   email: 'praveen@parkease.com',
   password: 'password123',
+}
+
+// Mock admin credentials for login
+export const MOCK_ADMIN_CREDENTIALS = {
+  email: 'admin@parkease.com',
+  password: 'admin123',
 }
 
 // Mock statistics for quick stats

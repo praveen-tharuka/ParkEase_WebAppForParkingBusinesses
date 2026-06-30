@@ -1,0 +1,531 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  OFFICER
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SlotType {
+  REGULAR
+  COMPACT
+  HANDICAPPED
+  ELECTRIC
+}
+
+enum SlotStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum VehicleStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+  COMPLETED
+}
+
+enum AllocationType {
+  RESERVED
+  WALK_IN
+}
+
+enum TicketStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReportType {
+  OCCUPANCY_REALTIME
+  REVENUE_DAILY
+  REVENUE_WEEKLY
+  REVENUE_MONTHLY
+  REVENUE_BY_VEHICLE
+  USER_GROWTH
+}
+
+enum ReportFormat {
+  PDF
+  EXCEL
+  CSV
+}
+
+model User {
+  id                String        @id @default(cuid())
+  externalId        String?       @unique
+  username          String?       @unique
+  email             String        @unique
+  passwordHash      String
+  fullName          String
+  phone             String?
+  company           String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  profilePictureUrl String?
+  role              Role          @default(CUSTOMER)
+  accountStatus     AccountStatus @default(PENDING_APPROVAL)
+  isActive          Boolean       @default(true)
+
+  approvedById  String?
+  approvedBy    User?   @relation("UserApprovals", fields: [approvedById], references: [id])
+  approvedUsers User[]  @relation("UserApprovals")
+
+  registrationDate DateTime  @default(now())
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  vehicles             Vehicle[]
+  reservations         Reservation[]
+  payments             Payment[]         @relation("CustomerPayments")
+  processedPayments    Payment[]         @relation("OfficerProcessedPayments")
+  generatedReceipts    Receipt[]         @relation("OfficerGeneratedReceipts")
+  generatedReports     Report[]          @relation("AdminGeneratedReports")
+  managedVehicleTypes  VehicleType[]     @relation("AdminVehicleTypeManager")
+  managedSlots         ParkingSlot[]     @relation("AdminSlotManager")
+  configuredFees       FeeStructure[]    @relation("AdminFeeConfigurator")
+  managedStaffAccounts StaffAccount[]    @relation("AdminManagedStaffAccounts")
+  staffAccount         StaffAccount?     @relation("StaffAccountReference")
+  approvalRequests     ApprovalRequest[] @relation("RequestedApprovals")
+  reviewedApprovals    ApprovalRequest[] @relation("ReviewedApprovals")
+  activities           UserActivity[]
+  preferences          UserPreference?
+  sessions             UserSession[]
+  registeredVehicles   Vehicle[]         @relation("OfficerRegisteredVehicles")
+  ticketsGenerated     ParkingTicket[]   @relation("OfficerGeneratedTickets")
+  ticketsAsCustomer    ParkingTicket[]   @relation("CustomerTickets")
+
+  @@index([role])
+  @@index([accountStatus])
+}
+
+model StaffAccount {
+  id               String @id @default(cuid())
+  managedByAdminId String
+  managedByAdmin   User   @relation("AdminManagedStaffAccounts", fields: [managedByAdminId], references: [id])
+
+  referenceUserId String @unique
+  referenceUser   User   @relation("StaffAccountReference", fields: [referenceUserId], references: [id])
+
+  accountType Role
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ParkingLocation {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  address        String?
+  timezone       String   @default("Asia/Colombo")
+  operatingOpen  String?
+  operatingClose String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  slots ParkingSlot[]
+}
+
+model ParkingSlot {
+  id         String     @id @default(cuid())
+  slotNumber String     @unique
+  slotType   SlotType
+  status     SlotStatus @default(AVAILABLE)
+
+  locationId String
+  location   ParkingLocation @relation(fields: [locationId], references: [id])
+
+  managedByAdminId String?
+  managedByAdmin   User?   @relation("AdminSlotManager", fields: [managedByAdminId], references: [id])
+
+  supportedVehicleTypeId String?
+  supportedVehicleType   VehicleType? @relation(fields: [supportedVehicleTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations Reservation[]
+  tickets      ParkingTicket[]
+
+  @@index([status])
+  @@index([locationId])
+}
+
+model VehicleType {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  managedByAdminId String?
+  managedByAdmin   User?   @relation("AdminVehicleTypeManager", fields: [managedByAdminId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicles      Vehicle[]
+  feeStructures FeeStructure[]
+  reports       Report[]
+  slotSupport   ParkingSlot[]
+}
+
+model Vehicle {
+  id          String        @id @default(cuid())
+  externalId  String?       @unique
+  plateNumber String        @unique
+  make        String
+  model       String
+  year        Int?
+  color       String?
+  status      VehicleStatus @default(ACTIVE)
+  isVerified  Boolean       @default(false)
+
+  ownerName String?
+  contact   String?
+
+  customerId String?
+  customer   User?   @relation(fields: [customerId], references: [id])
+
+  vehicleTypeId String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+
+  registeredByOfficerId String?
+  registeredByOfficer   User?   @relation("OfficerRegisteredVehicles", fields: [registeredByOfficerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations Reservation[]
+  tickets      ParkingTicket[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model FeeStructure {
+  id            String      @id @default(cuid())
+  vehicleTypeId String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+
+  slotType                  SlotType?
+  hourlyRate                Decimal   @db.Decimal(10, 2)
+  dailyRate                 Decimal   @db.Decimal(10, 2)
+  modificationFee           Decimal   @default(0) @db.Decimal(10, 2)
+  cancellationFeePercentage Decimal   @default(0) @db.Decimal(5, 2)
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  configuredByAdminId String?
+  configuredByAdmin   User?   @relation("AdminFeeConfigurator", fields: [configuredByAdminId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleTypeId, isActive])
+}
+
+model Reservation {
+  id              String @id @default(cuid())
+  reservationCode String @unique
+
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id])
+
+  slotId String
+  slot   ParkingSlot @relation(fields: [slotId], references: [id])
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  status          ReservationStatus @default(PENDING)
+  reservationDate DateTime          @default(now())
+  startTime       DateTime
+  endTime         DateTime
+
+  specialRequests String?
+  notes           String?
+
+  baseFee         Decimal @db.Decimal(10, 2)
+  modificationFee Decimal @default(0) @db.Decimal(10, 2)
+  cancellationFee Decimal @default(0) @db.Decimal(10, 2)
+  totalFee        Decimal @db.Decimal(10, 2)
+
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticket   ParkingTicket?
+  payments Payment[]
+
+  @@index([customerId])
+  @@index([slotId])
+  @@index([status])
+  @@index([startTime, endTime])
+}
+
+model ParkingTicket {
+  id            String  @id @default(cuid())
+  ticketNumber  String  @unique
+  ticketBarcode String  @unique
+  entryCode     String? @unique
+
+  slotId String
+  slot   ParkingSlot @relation(fields: [slotId], references: [id])
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  officerId String?
+  officer   User?   @relation("OfficerGeneratedTickets", fields: [officerId], references: [id])
+
+  reservationId String?      @unique
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+
+  customerId String?
+  customer   User?   @relation("CustomerTickets", fields: [customerId], references: [id])
+
+  allocationType AllocationType
+  checkInTime    DateTime?
+  checkOutTime   DateTime?
+
+  parkingFee Decimal @db.Decimal(10, 2)
+  totalFee   Decimal @db.Decimal(10, 2)
+
+  status    TicketStatus @default(ACTIVE)
+  isPrinted Boolean      @default(false)
+  printedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payment Payment?
+
+  @@index([status])
+}
+
+model Payment {
+  id               String @id @default(cuid())
+  paymentReference String @unique
+
+  ticketId String?        @unique
+  ticket   ParkingTicket? @relation(fields: [ticketId], references: [id])
+
+  reservationId String?
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+
+  customerId String?
+  customer   User?   @relation("CustomerPayments", fields: [customerId], references: [id])
+
+  processedByOfficerId String?
+  processedByOfficer   User?   @relation("OfficerProcessedPayments", fields: [processedByOfficerId], references: [id])
+
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  currency      String        @default("LKR")
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  receipt Receipt?
+
+  @@index([customerId])
+  @@index([paymentStatus])
+}
+
+model Receipt {
+  id            String @id @default(cuid())
+  receiptNumber String @unique
+
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  generatedByOfficerId String?
+  generatedByOfficer   User?   @relation("OfficerGeneratedReceipts", fields: [generatedByOfficerId], references: [id])
+
+  generatedDate DateTime      @default(now())
+  amountPaid    Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+}
+
+model ApprovalRequest {
+  id           String @id @default(cuid())
+  approvalCode String @unique
+
+  requestedById String
+  requestedBy   User   @relation("RequestedApprovals", fields: [requestedById], references: [id])
+
+  reviewedById String?
+  reviewedBy   User?   @relation("ReviewedApprovals", fields: [reviewedById], references: [id])
+
+  status          ApprovalStatus @default(PENDING)
+  requestedAt     DateTime       @default(now())
+  reviewedAt      DateTime?
+  rejectionReason String?
+  notes           String?
+
+  vehiclePlate    String?
+  vehicleMake     String?
+  vehicleModel    String?
+  vehicleColor    String?
+  vehicleTypeName String?
+
+  documents ApprovalDocument[]
+
+  @@index([status])
+  @@index([requestedById])
+}
+
+model ApprovalDocument {
+  id                String          @id @default(cuid())
+  approvalRequestId String
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+  documentType      String
+  documentUrl       String?
+  createdAt         DateTime        @default(now())
+}
+
+model UserActivity {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  detail     String?
+  occurredAt DateTime @default(now())
+  metadata   Json?
+
+  @@index([userId, occurredAt])
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailNotifications   Boolean @default(true)
+  smsNotifications     Boolean @default(false)
+  pushNotifications    Boolean @default(true)
+  marketingEmails      Boolean @default(false)
+  reservationReminders Boolean @default(true)
+  paymentAlerts        Boolean @default(true)
+
+  profileVisibility      String  @default("private")
+  showReservationHistory Boolean @default(false)
+  allowDataCollection    Boolean @default(true)
+  allowThirdPartySharing Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSession {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  device           String?
+  browser          String?
+  ipAddress        String?
+  location         String?
+  isCurrent        Boolean  @default(false)
+  isRevoked        Boolean  @default(false)
+  lastActiveAt     DateTime @default(now())
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([userId, isRevoked])
+  @@index([expiresAt])
+}
+
+model Report {
+  id                 String @id @default(cuid())
+  generatedByAdminId String
+  generatedByAdmin   User   @relation("AdminGeneratedReports", fields: [generatedByAdminId], references: [id])
+
+  reportType      ReportType
+  generatedDate   DateTime   @default(now())
+  reportStartDate DateTime?
+  reportEndDate   DateTime?
+
+  vehicleTypeId String?
+  vehicleType   VehicleType? @relation(fields: [vehicleTypeId], references: [id])
+
+  reportFormat   ReportFormat
+  reportFilePath String?
+
+  @@index([reportType, generatedDate])
+}
+
+model SystemSetting {
+  id                 String   @id @default(cuid())
+  businessName       String
+  businessEmail      String
+  businessPhone      String?
+  businessAddress    String?
+  businessLicense    String?
+  timezone           String   @default("Asia/Colombo")
+  currency           String   @default("LKR")
+  operatingOpen      String?
+  operatingClose     String?
+  maxVehiclesPerUser Int      @default(5)
+  cancellationPolicy String?
+  supportEmail       String?
+  supportPhone       String?
+  emailNotifications Boolean  @default(true)
+  smsNotifications   Boolean  @default(true)
+  maintenanceMode    Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

@@ -1,180 +1,257 @@
-function ReservationConfirm() {
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import Navbar from '../../components/Navigation/Navbar'
+import Footer from '../../components/Footer/Footer'
+
+const ReservationConfirm = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const reservationData = location.state?.reservationData || null
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  if (!reservationData) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">No reservation data found</p>
+            <button
+              onClick={() => navigate('/reservation/search')}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Start New Reservation
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  const { selectedSlot, formData, selectedVehicle, duration, totalAmount, checkOut } = reservationData
+
+  const handleConfirm = async () => {
+    if (!agreedToTerms) {
+      alert('Please agree to the Terms & Conditions')
+      return
+    }
+
+    setIsProcessing(true)
+
+    // Simulate payment processing
+    setTimeout(() => {
+      navigate('/reservation/success')
+    }, 1500)
+  }
+
   return (
-    <div style={styles.container}>
-      <h1 style={styles.pageTitle}>Confirm Your Reservation</h1>
-      <p style={styles.subtitle}>
-        Please review all details before confirming your booking
-      </p>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="flex-grow pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-4xl mx-auto">
+          {/* Step Indicator */}
+          <div className="mb-8 flex justify-center gap-8">
+            <div className="text-center">
+              <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">✓</div>
+              <p className="text-sm text-gray-600">Search</p>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">✓</div>
+              <p className="text-sm text-gray-600">Details</p>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">3</div>
+              <p className="text-sm text-gray-900 font-semibold">Confirm</p>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 bg-gray-300 text-white rounded-full flex items-center justify-center font-bold mx-auto mb-2">4</div>
+              <p className="text-sm text-gray-600">Success</p>
+            </div>
+          </div>
 
-      <div style={styles.grid}>
-        {/* Booking Details */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Booking Details</h2>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Confirm Your Reservation</h1>
+            <p className="text-gray-600 mt-2">Step 3 of 4 - Please review all details before confirming</p>
+          </div>
 
-          <h4 style={styles.subTitle}>Slot Information</h4>
-          <p><strong>Slot Number:</strong> A12</p>
-          <p><strong>Type:</strong> Covered</p>
-          <p><strong>Location:</strong> City Center</p>
-          <p><strong>Floor:</strong> B1</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Parking Details */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Parking Details</h2>
 
-          <h4 style={styles.subTitle}>Date & Time</h4>
-          <p><strong>Check-in:</strong> 12 Oct 2026 – 10:00 AM</p>
-          <p><strong>Check-out:</strong> 12 Oct 2026 – 2:00 PM</p>
-          <p><strong>Duration:</strong> 4 Hours</p>
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Slot Number</p>
+                    <p className="text-2xl font-bold text-gray-900">{selectedSlot.slotNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Location</p>
+                    <p className="text-lg font-semibold text-gray-900">{selectedSlot.location}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Vehicle Type</p>
+                    <p className="text-lg font-semibold text-gray-900">{selectedSlot.type}</p>
+                  </div>
+                </div>
+              </div>
 
-          <h4 style={styles.subTitle}>Vehicle Details</h4>
-          <p><strong>Number:</strong> WP CAB 1234</p>
-          <p><strong>Type:</strong> Car</p>
-          <p><strong>Brand:</strong> Toyota</p>
+              {/* Date & Time */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Date & Time</h2>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Check-in Date</p>
+                    <p className="text-lg font-semibold text-gray-900">{formData.checkInDate}</p>
+                    <p className="text-sm text-gray-600">{formData.checkInTime}</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Check-out</p>
+                    <p className="text-lg font-semibold text-gray-900">{checkOut}</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">Total Duration</p>
+                    <p className="text-2xl font-bold text-green-600">{duration} Hour(s)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Details */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Vehicle Details</h2>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Make & Model:</span>
+                    <span className="font-semibold text-gray-900">{selectedVehicle.make} {selectedVehicle.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">License Plate:</span>
+                    <span className="font-mono font-semibold text-gray-900">{selectedVehicle.licensePlate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Vehicle Type:</span>
+                    <span className="font-semibold text-gray-900">{selectedVehicle.type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Color:</span>
+                    <span className="font-semibold text-gray-900">{selectedVehicle.color}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms & Conditions */}
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Important Terms & Policies</h3>
+                <ul className="space-y-2 text-gray-700 mb-4">
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-3">✓</span>
+                    <span>Free cancellation up to 1 hour before check-in</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-600 mr-3">✓</span>
+                    <span>15-minute grace period for late arrival</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-3">⚠️</span>
+                    <span>Overstay charges apply beyond reserved time</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-orange-600 mr-3">⚠️</span>
+                    <span>No-show will result in full charge</span>
+                  </li>
+                </ul>
+
+                <label className="flex items-center mt-4 p-3 bg-white rounded border-2 border-yellow-300">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300"
+                  />
+                  <span className="ml-3 text-gray-900 font-semibold">
+                    I agree to the Terms & Conditions
+                  </span>
+                </label>
+              </div>
+
+              {/* Additional Notes */}
+              {(formData.specialRequests || formData.notes) && (
+                <div className="bg-blue-50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Your Special Requests</h3>
+                  {formData.specialRequests && (
+                    <p className="text-gray-700 mb-2"><strong>Requests:</strong> {formData.specialRequests}</p>
+                  )}
+                  {formData.notes && (
+                    <p className="text-gray-700"><strong>Notes:</strong> {formData.notes}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Price Summary</h3>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between pb-3 border-b">
+                    <span className="text-gray-600">Hourly Rate:</span>
+                    <span className="font-semibold text-gray-900">${selectedSlot.price.hourly}/hr</span>
+                  </div>
+                  <div className="flex justify-between pb-3 border-b">
+                    <span className="text-gray-600">Duration:</span>
+                    <span className="font-semibold text-gray-900">{duration} hours</span>
+                  </div>
+                  <div className="flex justify-between pb-3 border-b">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-semibold text-gray-900">${(selectedSlot.price.hourly * duration).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pb-3 border-b">
+                    <span className="text-gray-600">Service Fee:</span>
+                    <span className="font-semibold text-gray-900">$0.00</span>
+                  </div>
+
+                  <div className="pt-3 flex justify-between items-center">
+                    <span className="text-lg font-bold text-gray-900">Total Amount:</span>
+                    <span className="text-3xl font-bold text-blue-600">${totalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleConfirm}
+                  disabled={!agreedToTerms || isProcessing}
+                  className={`w-full px-6 py-3 rounded-lg font-semibold transition ${
+                    agreedToTerms && !isProcessing
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {isProcessing ? 'Processing...' : 'Confirm Reservation'}
+                </button>
+
+                <button
+                  onClick={() => navigate(-1)}
+                  className="w-full mt-3 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+                >
+                  Edit Details
+                </button>
+
+                <p className="text-xs text-gray-500 text-center mt-4">
+                  Your payment will be processed securely
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Pricing Breakdown */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Pricing Breakdown</h2>
-
-          <p><span style={styles.label}>Base Fee:</span> LKR 200</p>
-          <p><span style={styles.label}>Duration Charges:</span> LKR 600</p>
-          <p><span style={styles.label}>Subtotal:</span> LKR 800</p>
-          <p><span style={styles.label}>Service Fee:</span> LKR 50</p>
-
-          <hr style={styles.divider} />
-
-          <p style={styles.total}>Total: LKR 850</p>
-        </div>
       </div>
-
-      {/* Important Notes */}
-      <div style={styles.notesCard}>
-        <h2 style={styles.cardTitle}>Important Notes</h2>
-        <p>❌ Free cancellation up to 1 hour before check-in</p>
-        <p>⏰ 15-minute grace period for late arrival</p>
-        <p>⚠️ Overstay charges apply beyond reserved time</p>
-        <p>🚫 No-show will result in full charge</p>
-      </div>
-
-      {/* Terms */}
-      <div style={styles.terms}>
-        <input type="checkbox" />
-        <label>&nbsp;I agree to the Terms & Conditions</label>
-      </div>
-
-      {/* Feedback UI */}
-      <p style={styles.processing}>Processing your reservation...</p>
-      <p style={styles.error}>⚠️ Payment failed. Please try again.</p>
-
-      {/* Actions */}
-      <div style={styles.actions}>
-        <button style={styles.secondaryBtn}>Edit Booking</button>
-        <button style={styles.secondaryBtn}>Cancel</button>
-        <button style={styles.primaryBtn}>
-          Confirm Reservation
-        </button>
-      </div>
+      <Footer />
     </div>
-  );
+  )
 }
 
-const styles = {
-  container: {
-    padding: "50px 20px",
-    backgroundColor: "#f9fafb",
-    minHeight: "100vh",
-  },
-  pageTitle: {
-    textAlign: "center",
-    fontSize: "32px",
-    fontWeight: "700",
-  },
-  subtitle: {
-    textAlign: "center",
-    color: "#666",
-    marginBottom: "40px",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "25px",
-    maxWidth: "1000px",
-    margin: "0 auto",
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: "25px",
-    borderRadius: "12px",
-    boxShadow: "0 6px 15px rgba(0,0,0,0.08)",
-  },
-  notesCard: {
-    maxWidth: "1000px",
-    margin: "30px auto",
-    backgroundColor: "#fff",
-    padding: "25px",
-    borderRadius: "12px",
-    boxShadow: "0 6px 15px rgba(0,0,0,0.08)",
-  },
-  cardTitle: {
-    fontSize: "20px",
-    fontWeight: "600",
-    borderBottom: "2px solid #2dd4d4",
-    paddingBottom: "8px",
-    marginBottom: "15px",
-  },
-  subTitle: {
-    marginTop: "15px",
-    fontWeight: "600",
-    color: "#444",
-  },
-  label: {
-    fontWeight: "600",
-  },
-  divider: {
-    margin: "15px 0",
-    borderTop: "1px solid #eee",
-  },
-  total: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#2dd4d4",
-    textAlign: "right",
-  },
-  terms: {
-    textAlign: "center",
-    margin: "20px 0",
-  },
-  processing: {
-    textAlign: "center",
-    color: "#555",
-    fontStyle: "italic",
-  },
-  error: {
-    textAlign: "center",
-    color: "red",
-    fontSize: "14px",
-  },
-  actions: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "15px",
-    marginTop: "25px",
-  },
-  primaryBtn: {
-    backgroundColor: "#2dd4d4",
-    color: "#fff",
-    border: "none",
-    padding: "14px 30px",
-    borderRadius: "8px",
-    fontSize: "16px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-  secondaryBtn: {
-    backgroundColor: "transparent",
-    color: "#2dd4d4",
-    border: "2px solid #2dd4d4",
-    padding: "12px 20px",
-    borderRadius: "8px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-};
-
-export default ReservationConfirm;
+export default ReservationConfirm

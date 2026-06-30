@@ -6,7 +6,7 @@ const DashboardSidebar = () => {
 
   const menuItems = [
     {
-      path: '/dashboard',
+      path: '/user-dashboard',
       label: 'Dashboard',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,7 +15,7 @@ const DashboardSidebar = () => {
       ),
     },
     {
-      path: '/search',
+      path: '/reservation/search',
       label: 'Find Parking',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

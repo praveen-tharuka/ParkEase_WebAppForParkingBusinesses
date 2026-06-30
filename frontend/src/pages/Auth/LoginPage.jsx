@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { mockUser, MOCK_CREDENTIALS } from '../../data/mockUserData'
+import { mockUser, mockAdmin, MOCK_CREDENTIALS, MOCK_ADMIN_CREDENTIALS } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
 const LoginPage = () => {
+  const [loginType, setLoginType] = useState('user') // 'user' or 'admin'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
@@ -42,18 +43,44 @@ const LoginPage = () => {
       return
     }
 
-    // Check against mock credentials
-    const emailMatch = email.toLowerCase().trim() === MOCK_CREDENTIALS.email.toLowerCase() || 
-                        email.toLowerCase().trim() === 'praveen'
-    const passwordMatch = password === MOCK_CREDENTIALS.password
+    if (loginType === 'user') {
+      // Check against mock user credentials
+      const emailMatch = email.toLowerCase().trim() === MOCK_CREDENTIALS.email.toLowerCase() || 
+                          email.toLowerCase().trim() === 'praveen'
+      const passwordMatch = password === MOCK_CREDENTIALS.password
 
-    if (emailMatch && passwordMatch) {
-      // Authenticate the user and navigate to dashboard
-      login(mockUser)
-      navigate('/user-dashboard')
-    } else {
-      navigate('/login-error')
+      if (emailMatch && passwordMatch) {
+        // Authenticate the user and navigate to dashboard
+        login(mockUser)
+        navigate('/user-dashboard')
+      } else {
+        navigate('/login-error')
+      }
+    } else if (loginType === 'admin') {
+      // Check against mock admin credentials
+      const emailMatch = email.toLowerCase().trim() === MOCK_ADMIN_CREDENTIALS.email.toLowerCase() || 
+                          email.toLowerCase().trim() === 'admin'
+      const passwordMatch = password === MOCK_ADMIN_CREDENTIALS.password
+
+      if (emailMatch && passwordMatch) {
+        // Authenticate the admin and navigate to admin dashboard
+        login(mockAdmin)
+        navigate('/admin-dashboard')
+      } else {
+        navigate('/login-error')
+      }
     }
+  }
+
+  const clearForm = () => {
+    setEmail('')
+    setPassword('')
+    setErrors({})
+  }
+
+  const handleTabChange = (type) => {
+    setLoginType(type)
+    clearForm()
   }
 
   return (
@@ -66,6 +93,31 @@ const LoginPage = () => {
             <p className="text-gray-600">Login to your ParkEase account</p>
           </div>
 
+          {/* Login Type Tabs */}
+          <div className="flex gap-4 mb-6 bg-white rounded-lg shadow-sm p-1">
+            <button
+              onClick={() => handleTabChange('user')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+                loginType === 'user'
+                  ? 'bg-brand text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              User Login
+            </button>
+            <button
+              onClick={() => handleTabChange('admin')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+                loginType === 'admin'
+                  ? 'bg-brand text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Admin Login
+            </button>
+          </div>
+
+          {/* Login Form */}
           <form onSubmit={handleLogin} className="bg-white rounded-lg shadow-lg p-8 space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -82,7 +134,7 @@ const LoginPage = () => {
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand transition-colors ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Enter your email or username"
+                placeholder={loginType === 'user' ? "Enter your email or username" : "Enter admin email or username"}
                 aria-describedby={errors.email ? 'email-error' : undefined}
               />
               {errors.email && (
@@ -135,24 +187,40 @@ const LoginPage = () => {
               type="submit"
               className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
             >
-              Login
+              Login as {loginType === 'user' ? 'User' : 'Admin'}
             </button>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+            {/* Demo Credentials */}
+            <div className={`border rounded-lg p-3 text-sm ${
+              loginType === 'user'
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-purple-50 border-purple-200 text-purple-700'
+            }`}>
               <p className="font-semibold">Demo Credentials:</p>
-              <p>Email: praveen@parkease.com | Password: password123</p>
-              <p className="mt-1 text-xs">Or use username: praveen</p>
+              {loginType === 'user' ? (
+                <>
+                  <p>Email: praveen@parkease.com | Password: password123</p>
+                  <p className="mt-1 text-xs">Or use username: praveen</p>
+                </>
+              ) : (
+                <>
+                  <p>Email: admin@parkease.com | Password: admin123</p>
+                  <p className="mt-1 text-xs">Or use username: admin</p>
+                </>
+              )}
             </div>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-700">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-brand font-semibold hover:text-opacity-80 transition-colors">
-                Sign Up
-              </Link>
-            </p>
-          </div>
+          {loginType === 'user' && (
+            <div className="mt-6 text-center">
+              <p className="text-gray-700">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-brand font-semibold hover:text-opacity-80 transition-colors">
+                  Sign Up
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
