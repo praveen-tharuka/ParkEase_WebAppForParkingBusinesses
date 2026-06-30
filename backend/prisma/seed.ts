@@ -11,9 +11,7 @@ import { PrismaClient, Role, AccountStatus, SlotType, SlotStatus, VehicleStatus,
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
@@ -33,6 +31,25 @@ function fakePasswordHash(plain: string): string {
 // Main seed
 // ---------------------------------------------------------------------------
 async function main() {
+  console.log('🧹 Cleaning up database tables...');
+  await prisma.receipt.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.parkingTicket.deleteMany();
+  await prisma.reservation.deleteMany();
+  await prisma.approvalDocument.deleteMany();
+  await prisma.approvalRequest.deleteMany();
+  await prisma.vehicle.deleteMany();
+  await prisma.staffAccount.deleteMany();
+  await prisma.userActivity.deleteMany();
+  await prisma.userPreference.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.feeStructure.deleteMany();
+  await prisma.parkingSlot.deleteMany();
+  await prisma.parkingLocation.deleteMany();
+  await prisma.vehicleType.deleteMany();
+  await prisma.systemSetting.deleteMany();
+  console.log('    ✓ Database clean.\n');
+
   console.log('🌱 Seeding ParkEase database...\n');
 
   // ── 1. System Settings ──────────────────────────────────────────────────
