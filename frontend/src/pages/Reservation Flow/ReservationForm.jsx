@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { mockVehicles } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
+import { reservationsAPI } from '../../services/api'
 import Footer from '../../components/Footer/Footer'
 
 const ReservationForm = () => {
