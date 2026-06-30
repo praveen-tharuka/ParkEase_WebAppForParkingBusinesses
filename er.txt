@@ -1,0 +1,204 @@
+erDiagram
+    %% =====================================================
+    %% ParkEase Web App - ER Diagram
+    %% Based on Use Case Diagram
+    %% =====================================================
+
+    %% ===== ACTORS AS ENTITIES =====
+    
+    CUSTOMER ||--o{ RESERVATION : makes
+    CUSTOMER ||--o{ PAYMENT : processes
+    CUSTOMER ||--o{ VEHICLE : owns
+    CUSTOMER {
+        int customer_id PK
+        string username UK
+        string password
+        string email UK
+        string phone
+        string full_name
+        date registration_date
+        string customer_type "new, existing"
+        boolean is_active
+    }
+
+    ADMIN ||--o{ PARKING_SLOT : manages
+    ADMIN ||--o{ FEE_STRUCTURE : configures
+    ADMIN ||--o{ REPORT : generates
+    ADMIN ||--o{ VEHICLE_TYPE : manages
+    ADMIN ||--o{ STAFF_ACCOUNT : manages
+    ADMIN {
+        int admin_id PK
+        string username UK
+        string password
+        string email UK
+        string full_name
+        string role "admin, manager"
+        date created_date
+        boolean is_active
+    }
+
+    PARKING_OFFICER ||--o{ PARKING_TICKET : generates
+    PARKING_OFFICER ||--o{ VEHICLE : registers
+    PARKING_OFFICER ||--o{ PAYMENT : accepts
+    PARKING_OFFICER ||--o{ RECEIPT : generates
+    PARKING_OFFICER {
+        int officer_id PK
+        string username UK
+        string password
+        string full_name
+        string contact
+        date registered_date
+        boolean is_active
+    }
+
+    %% Staff Account managed by Admin
+    STAFF_ACCOUNT {
+        int account_id PK
+        int managed_by_admin_id FK
+        string account_type "admin, officer"
+        int reference_id FK "admin_id or officer_id"
+        date created_date
+        date updated_date
+        boolean is_active
+    }
+
+    %% ===== PARKING SLOT MANAGEMENT =====
+    
+    PARKING_SLOT ||--o{ RESERVATION : reserved_for
+    PARKING_SLOT ||--o{ PARKING_TICKET : allocated_to
+    PARKING_SLOT {
+        int slot_id PK
+        string slot_number UK
+        string slot_type "regular, compact, handicapped, electric"
+        string location
+        string status "available, occupied, reserved, maintenance"
+        int managed_by_admin_id FK
+        datetime created_at
+        datetime last_modified
+    }
+
+    %% ===== VEHICLE MANAGEMENT =====
+    
+    VEHICLE ||--|| VEHICLE_TYPE : belongs_to
+    VEHICLE ||--o{ PARKING_TICKET : issued_for
+    VEHICLE {
+        int vehicle_id PK
+        string vehicle_number UK
+        int vehicle_type_id FK
+        int customer_id FK "nullable for walk-ins"
+        int registered_by_officer_id FK
+        string owner_name
+        string contact
+        datetime registered_date
+        boolean is_active
+    }
+
+    VEHICLE_TYPE ||--o{ FEE_STRUCTURE : has_rates
+    VEHICLE_TYPE {
+        int vehicle_type_id PK
+        string type_name UK "car, motorcycle, truck, van, bus"
+        string description
+        int managed_by_admin_id FK
+        datetime created_at
+        boolean is_active
+    }
+
+    %% ===== FEE STRUCTURE (Configure Parking Rates) =====
+    
+    FEE_STRUCTURE {
+        int fee_id PK
+        int vehicle_type_id FK
+        string slot_type
+        decimal hourly_rate
+        decimal daily_rate
+        decimal modification_fee
+        decimal cancellation_fee_percentage
+        date effective_from
+        date effective_to
+        int configured_by_admin_id FK
+        boolean is_active
+    }
+
+    %% ===== RESERVATION SYSTEM =====
+    
+    RESERVATION ||--o| PARKING_TICKET : converts_to
+    RESERVATION {
+        int reservation_id PK
+        int customer_id FK
+        int slot_id FK
+        datetime reservation_date
+        datetime start_time
+        datetime end_time
+        string status "pending, confirmed, modified, cancelled, checked_in, completed"
+        decimal base_fee
+        decimal modification_fee
+        decimal cancellation_fee
+        decimal total_fee
+        datetime created_at
+        datetime modified_at
+        datetime cancelled_at
+        string cancellation_reason
+    }
+
+    %% ===== PARKING TICKET (On-Arrival System) =====
+    
+    PARKING_TICKET ||--|| PAYMENT : requires
+    PARKING_TICKET {
+        int ticket_id PK
+        string ticket_number UK
+        string ticket_barcode UK
+        int slot_id FK
+        int vehicle_id FK
+        int officer_id FK
+        int reservation_id FK "nullable for walk-ins"
+        int customer_id FK "nullable for walk-ins"
+        string allocation_type "reserved, walk_in"
+        datetime check_in_time
+        datetime check_out_time
+        decimal parking_fee
+        decimal total_fee
+        string status "active, completed"
+        boolean is_printed
+        datetime printed_at
+    }
+
+    %% ===== PAYMENT SYSTEM =====
+    
+    PAYMENT ||--|| RECEIPT : generates
+    PAYMENT {
+        int payment_id PK
+        string payment_reference UK
+        int ticket_id FK
+        int customer_id FK "nullable for walk-in"
+        int processed_by_officer_id FK "nullable for online"
+        decimal total_amount
+        string payment_method "cash, card, mobile, online"
+        datetime payment_date
+        string payment_status "pending, completed, failed, refunded"
+    }
+
+    %% ===== RECEIPT =====
+    
+    RECEIPT {
+        int receipt_id PK
+        string receipt_number UK
+        int payment_id FK
+        int generated_by_officer_id FK
+        datetime generated_date
+        decimal amount_paid
+        string payment_method
+    }
+
+    %% ===== REPORTS (Admin System) =====
+    
+    REPORT {
+        int report_id PK
+        int generated_by_admin_id FK
+        string report_type "occupancy_realtime, revenue_daily, revenue_weekly, revenue_monthly, revenue_by_vehicle"
+        datetime generated_date
+        date report_start_date
+        date report_end_date
+        int vehicle_type_id FK "nullable"
+        string report_format "pdf, excel, csv"
+        string report_file_path
+    }

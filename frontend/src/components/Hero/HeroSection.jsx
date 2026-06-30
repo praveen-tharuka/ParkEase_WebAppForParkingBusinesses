@@ -1,7 +1,17 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const HeroSection = () => {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+
+  const handleFindParking = () => {
+    if (isAuthenticated) {
+      navigate('/reservation/search')
+    } else {
+      navigate('/login')
+    }
+  }
 
   return (
     <section id="home" className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-white">
@@ -21,12 +31,15 @@ const HeroSection = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button 
-              onClick={() => navigate('/search')}
+              onClick={handleFindParking}
               className="px-8 py-3 bg-brand text-white text-lg font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-lg"
             >
               Find Parking
             </button>
-            <button className="px-8 py-3 border-2 border-brand text-brand text-lg font-semibold rounded-lg hover:bg-brand hover:text-white transition-colors">
+            <button 
+              onClick={() => navigate('/signup')}
+              className="px-8 py-3 border-2 border-brand text-brand text-lg font-semibold rounded-lg hover:bg-brand hover:text-white transition-colors"
+            >
               Sign Up
             </button>
           </div>
