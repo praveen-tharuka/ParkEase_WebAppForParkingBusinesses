@@ -8,8 +8,14 @@
  */
 
 import { PrismaClient, Role, AccountStatus, SlotType, SlotStatus, VehicleStatus, ReservationStatus, AllocationType, TicketStatus, PaymentMethod, PaymentStatus, ReportType, ReportFormat, ApprovalStatus } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-const prisma = new PrismaClient();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // ---------------------------------------------------------------------------
 // Helpers
