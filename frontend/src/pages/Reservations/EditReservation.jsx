@@ -1,35 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/Dashboard/DashboardLayout';
+import api from '../../services/api';
 
 const EditReservation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    location: 'Downtown Parking',
-    slotNumber: 'A-12',
-    startDate: '2026-01-20',
-    startTime: '09:00 AM',
-    endDate: '2026-01-20',
-    endTime: '05:00 PM',
-    vehicle: 'Toyota Camry - ABC123',
-    specialRequests: 'Near elevator access',
+    location: '',
+    slotNumber: '',
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    vehicle: '',
+    specialRequests: '',
     notes: ''
   });
 
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const formatDateForInput = (dateObj) => {
+    const d = new Date(dateObj);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${date}`;
+  };
+
+  const formatTimeForInput = (dateObj) => {
+    const d = new Date(dateObj);
+    if (isNaN(d.getTime())) return '';
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  useEffect(() => {
+    const fetchReservation = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.reservationsAPI.getReservationById(id);
+        if (response.success) {
+          const res = response.data;
+          setFormData({
+            location: res.slot?.location?.name || 'Unknown Location',
+            slotNumber: res.slot?.slotNumber || 'N/A',
+            startDate: formatDateForInput(res.startTime),
+            startTime: formatTimeForInput(res.startTime),
+            endDate: formatDateForInput(res.endTime),
+            endTime: formatTimeForInput(res.endTime),
+            vehicle: res.vehicle ? `${res.vehicle.make} ${res.vehicle.model} - ${res.vehicle.plateNumber}` : 'N/A',
+            specialRequests: res.specialRequests || '',
+            notes: res.notes || ''
+          });
+        } else {
+          alert(response.error || 'Failed to load reservation details.');
+          navigate('/dashboard/reservations');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to load reservation details.');
+        navigate('/dashboard/reservations');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReservation();
+  }, [id]);
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
-    }
-    if (!formData.slotNumber.trim()) {
-      newErrors.slotNumber = 'Slot number is required';
-    }
     if (!formData.startDate) {
       newErrors.startDate = 'Start date is required';
     }
@@ -42,16 +89,21 @@ const EditReservation = () => {
     if (!formData.endTime) {
       newErrors.endTime = 'End time is required';
     }
-    if (!formData.vehicle.trim()) {
-      newErrors.vehicle = 'Vehicle is required';
-    }
 
-    // Check if end date/time is after start date/time
-    const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
-    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+    if (formData.startDate && formData.startTime && formData.endDate && formData.endTime) {
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
-    if (endDateTime <= startDateTime) {
-      newErrors.endTime = 'End time must be after start time';
+      if (isNaN(startDateTime.getTime())) {
+        newErrors.startTime = 'Invalid start date/time';
+      }
+      if (isNaN(endDateTime.getTime())) {
+        newErrors.endTime = 'Invalid end date/time';
+      }
+
+      if (endDateTime <= startDateTime) {
+        newErrors.endTime = 'End time must be after start time';
+      }
     }
 
     setErrors(newErrors);
@@ -82,10 +134,23 @@ const EditReservation = () => {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Reservation updated successfully!');
-      navigate('/dashboard/reservations');
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+
+      const updatePayload = {
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        specialRequests: formData.specialRequests,
+        notes: formData.notes,
+      };
+
+      const response = await api.reservationsAPI.updateReservation(id, updatePayload);
+      if (response.success) {
+        alert('Reservation updated successfully!');
+        navigate(`/dashboard/reservations/${id}`);
+      } else {
+        alert(response.error || 'Failed to update reservation.');
+      }
     } catch (error) {
       console.error('Error updating reservation:', error);
       alert('Failed to update reservation. Please try again.');
@@ -97,6 +162,22 @@ const EditReservation = () => {
   const handleCancel = () => {
     navigate(`/dashboard/reservations/${id}`);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-3">
+            <svg className="animate-spin h-10 w-10 text-brand" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-gray-600 font-medium">Loading reservation...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -114,7 +195,7 @@ const EditReservation = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 border border-gray-150">
           {/* Location Section */}
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Location Details</h2>
@@ -127,15 +208,9 @@ const EditReservation = () => {
                   type="text"
                   name="location"
                   value={formData.location}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.location
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
+                  className="w-full px-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-650 cursor-not-allowed focus:outline-none"
                   disabled
                 />
-                {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
               </div>
 
               <div>
@@ -146,15 +221,9 @@ const EditReservation = () => {
                   type="text"
                   name="slotNumber"
                   value={formData.slotNumber}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.slotNumber
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  placeholder="e.g., A-12"
+                  className="w-full px-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-650 cursor-not-allowed focus:outline-none"
+                  disabled
                 />
-                {errors.slotNumber && <p className="text-red-500 text-sm mt-1">{errors.slotNumber}</p>}
               </div>
             </div>
           </div>
@@ -172,10 +241,8 @@ const EditReservation = () => {
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.startDate
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand ${
+                    errors.startDate ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
@@ -190,10 +257,8 @@ const EditReservation = () => {
                   name="startTime"
                   value={formData.startTime}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.startTime
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand ${
+                    errors.startTime ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.startTime && <p className="text-red-500 text-sm mt-1">{errors.startTime}</p>}
@@ -208,10 +273,8 @@ const EditReservation = () => {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.endDate
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand ${
+                    errors.endDate ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
@@ -226,10 +289,8 @@ const EditReservation = () => {
                   name="endTime"
                   value={formData.endTime}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.endTime
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand ${
+                    errors.endTime ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.endTime && <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>}
@@ -248,21 +309,15 @@ const EditReservation = () => {
                 type="text"
                 name="vehicle"
                 value={formData.vehicle}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.vehicle
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="e.g., Toyota Camry - ABC123"
+                className="w-full px-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-650 cursor-not-allowed focus:outline-none"
+                disabled
               />
-              {errors.vehicle && <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>}
             </div>
           </div>
 
           {/* Additional Requests Section */}
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Special Requests</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Special Requests & Notes</h2>
             <div className="grid grid-cols-1 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -273,7 +328,7 @@ const EditReservation = () => {
                   name="specialRequests"
                   value={formData.specialRequests}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g., Near entrance, covered spot"
                 />
               </div>
@@ -287,7 +342,7 @@ const EditReservation = () => {
                   value={formData.notes}
                   onChange={handleChange}
                   rows="4"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                   placeholder="Any additional information or requests..."
                 />
               </div>
@@ -299,14 +354,14 @@ const EditReservation = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="flex-1 bg-brand text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition font-semibold"
+              className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition font-semibold"
             >
               Cancel
             </button>
@@ -325,4 +380,3 @@ const EditReservation = () => {
 };
 
 export default EditReservation;
-

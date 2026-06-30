@@ -271,7 +271,7 @@ export const ticketsAPI = {
 // ============================================
 export const vehiclesAPI = {
   getUserVehicles: async (userId) => {
-    return apiCall(`/users/${userId}/vehicles`, {
+    return apiCall('/vehicles', {
       method: 'GET',
       requiresAuth: true,
     })
@@ -344,6 +344,42 @@ export const usersAPI = {
   activateUser: async (userId) => {
     return apiCall(`/users/${userId}/activate`, {
       method: 'PATCH',
+      requiresAuth: true,
+    })
+  },
+
+  changePassword: async (userId, currentPassword, newPassword) => {
+    return apiCall(`/users/${userId}/change-password`, {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+      requiresAuth: true,
+    })
+  },
+
+  getUserSessions: async (userId) => {
+    return apiCall(`/users/${userId}/sessions`, {
+      method: 'GET',
+      requiresAuth: true,
+    })
+  },
+
+  deleteSession: async (userId, sessionId) => {
+    return apiCall(`/users/${userId}/sessions/${sessionId}`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    })
+  },
+
+  deleteAllSessions: async (userId) => {
+    return apiCall(`/users/${userId}/sessions`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    })
+  },
+
+  deleteAccount: async (userId) => {
+    return apiCall(`/users/${userId}`, {
+      method: 'DELETE',
       requiresAuth: true,
     })
   },

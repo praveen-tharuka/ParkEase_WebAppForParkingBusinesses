@@ -9,6 +9,9 @@ const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +33,9 @@ app.get('/', (_req, res) => {
 // Mounted Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/reservations', ticketRoutes);
 
 // Start server
 app.listen(PORT, () => {

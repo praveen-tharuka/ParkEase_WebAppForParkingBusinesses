@@ -27,10 +27,8 @@ import MyReservations from "./pages/Reservations/MyReservations";
 import ReservationDetails from "./pages/Reservations/ReservationDetails";
 import EditReservation from "./pages/Reservations/EditReservation";
 import DigitalTicket from "./pages/Reservations/DigitalTicket";
-
-
-
-
+import MyProfilePage from './pages/User/MyProfilePage'
+import SettingsPage from './pages/User/SettingsPage'
 
 function App() {
   return (
@@ -173,6 +171,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyVehiclesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/profile"
+            element={
+              <ProtectedRoute>
+                <MyProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             }
           />

@@ -25,19 +25,37 @@ const MyProfilePage = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        zipCode: user.zipCode || '',
-        profilePicture: user.profilePicture || null,
-      });
-    }
-  }, [user]);
+    const fetchProfile = async () => {
+      if (!user?.id) return;
+      setIsLoading(true);
+      try {
+        const response = await api.usersAPI.getUserProfile(user.id);
+        if (response.success) {
+          const u = response.data;
+          // Update local state and auth context
+          setFormData({
+            name: u.fullName || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            address: u.address || '',
+            city: u.city || '',
+            state: u.state || '',
+            zipCode: u.zipCode || '',
+            profilePicture: u.profilePictureUrl || null,
+          });
+        } else {
+          setError(response.error || 'Failed to load profile.');
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user?.id]);
 
   // Generate avatar initials
   const getAvatarInitials = () => {
