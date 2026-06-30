@@ -2,6 +2,7 @@
 // Supplies the datasource and schema settings expected by Prisma CLI v7.
 const fs = require('fs');
 const path = require('path');
+const { defineConfig } = require('prisma/config');
 
 // Manually load .env file if process.env.DATABASE_URL is not set
 if (!process.env.DATABASE_URL) {
@@ -28,12 +29,12 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
-module.exports = {
+module.exports = defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
   },
   migrations: {
     seed: 'npx ts-node prisma/seed.ts',
   },
-};
+});

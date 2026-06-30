@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, logout } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
@@ -34,7 +34,7 @@ const LoginPage = () => {
     return newErrors
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     const newErrors = validateForm()
 
@@ -43,32 +43,26 @@ const LoginPage = () => {
       return
     }
 
-    if (loginType === 'user') {
-      // Check against mock user credentials
-      const emailMatch = email.toLowerCase().trim() === MOCK_CREDENTIALS.email.toLowerCase() || 
-                          email.toLowerCase().trim() === 'praveen'
-      const passwordMatch = password === MOCK_CREDENTIALS.password
-
-      if (emailMatch && passwordMatch) {
-        // Authenticate the user and navigate to dashboard
-        login(mockUser)
-        navigate('/user-dashboard')
+    try {
+      const response = await login(email, password)
+      if (response.success) {
+        const userRole = response.user.role
+        if (loginType === 'admin') {
+          if (userRole === 'ADMIN' || userRole === 'OFFICER') {
+            navigate('/admin-dashboard')
+          } else {
+            setErrors({ email: 'Access denied: You do not have administrator permissions.' })
+            await logout().catch(() => {})
+          }
+        } else {
+          navigate('/user-dashboard')
+        }
       } else {
-        navigate('/login-error')
+        setErrors({ submit: response.error || 'Invalid email or password' })
       }
-    } else if (loginType === 'admin') {
-      // Check against mock admin credentials
-      const emailMatch = email.toLowerCase().trim() === MOCK_ADMIN_CREDENTIALS.email.toLowerCase() || 
-                          email.toLowerCase().trim() === 'admin'
-      const passwordMatch = password === MOCK_ADMIN_CREDENTIALS.password
-
-      if (emailMatch && passwordMatch) {
-        // Authenticate the admin and navigate to admin dashboard
-        login(mockAdmin)
-        navigate('/admin-dashboard')
-      } else {
-        navigate('/login-error')
-      }
+    } catch (err) {
+      console.error('Login Error:', err)
+      setErrors({ submit: 'An unexpected error occurred. Please try again later.' })
     }
   }
 
@@ -119,6 +113,11 @@ const LoginPage = () => {
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+            {errors.submit && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
+                {errors.submit}
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email or Username
