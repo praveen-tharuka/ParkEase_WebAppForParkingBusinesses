@@ -4,8 +4,8 @@
  * Currently configured for mock data, ready for backend integration
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api'
-const API_TIMEOUT = 30000
+const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) || 'http://localhost:3000/api';
+const API_TIMEOUT = 30000;
 
 // Helper function for API calls with error handling
 async function apiCall(endpoint, options = {}) {
@@ -87,8 +87,11 @@ export const authAPI = {
   },
 
   refreshToken: async () => {
+    const refreshToken = localStorage.getItem('parkease_refresh_token')
     return apiCall('/auth/refresh', {
       method: 'POST',
+      body: { refreshToken },
+      requiresAuth: false,
     })
   },
 
@@ -268,7 +271,7 @@ export const ticketsAPI = {
 // ============================================
 export const vehiclesAPI = {
   getUserVehicles: async (userId) => {
-    return apiCall(`/users/${userId}/vehicles`, {
+    return apiCall('/vehicles', {
       method: 'GET',
       requiresAuth: true,
     })
@@ -341,6 +344,42 @@ export const usersAPI = {
   activateUser: async (userId) => {
     return apiCall(`/users/${userId}/activate`, {
       method: 'PATCH',
+      requiresAuth: true,
+    })
+  },
+
+  changePassword: async (userId, currentPassword, newPassword) => {
+    return apiCall(`/users/${userId}/change-password`, {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+      requiresAuth: true,
+    })
+  },
+
+  getUserSessions: async (userId) => {
+    return apiCall(`/users/${userId}/sessions`, {
+      method: 'GET',
+      requiresAuth: true,
+    })
+  },
+
+  deleteSession: async (userId, sessionId) => {
+    return apiCall(`/users/${userId}/sessions/${sessionId}`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    })
+  },
+
+  deleteAllSessions: async (userId) => {
+    return apiCall(`/users/${userId}/sessions`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    })
+  },
+
+  deleteAccount: async (userId) => {
+    return apiCall(`/users/${userId}`, {
+      method: 'DELETE',
       requiresAuth: true,
     })
   },
@@ -433,6 +472,20 @@ export const walkinsAPI = {
     const queryParams = new URLSearchParams(filters).toString()
     return apiCall(`/walkins?${queryParams}`, {
       method: 'GET',
+      requiresAuth: true,
+    })
+  },
+
+  checkoutWalkIn: async (id) => {
+    return apiCall(`/walkins/${id}/checkout`, {
+      method: 'PATCH',
+      requiresAuth: true,
+    })
+  },
+
+  deleteWalkIn: async (id) => {
+    return apiCall(`/walkins/${id}`, {
+      method: 'DELETE',
       requiresAuth: true,
     })
   },

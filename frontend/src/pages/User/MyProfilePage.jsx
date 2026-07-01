@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/Dashboard/DashboardLayout';
-import { api } from '../../services/api';
+import api from '../../services/api';
 
 const MyProfilePage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -23,6 +23,39 @@ const MyProfilePage = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return;
+      setIsLoading(true);
+      try {
+        const response = await api.usersAPI.getUserProfile(user.id);
+        if (response.success) {
+          const u = response.data;
+          // Update local state and auth context
+          setFormData({
+            name: u.fullName || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            address: u.address || '',
+            city: u.city || '',
+            state: u.state || '',
+            zipCode: u.zipCode || '',
+            profilePicture: u.profilePictureUrl || null,
+          });
+        } else {
+          setError(response.error || 'Failed to load profile.');
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user?.id]);
 
   // Generate avatar initials
   const getAvatarInitials = () => {
@@ -99,17 +132,27 @@ const MyProfilePage = () => {
 
     setIsLoading(true);
     try {
-      // Call API to update user profile
-      // await api.usersAPI.updateUserProfile(formData);
+      const updatePayload = {
+        fullName: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        profilePictureUrl: formData.profilePicture,
+      };
+
+      const response = await api.usersAPI.updateUserProfile(user.id, updatePayload);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setSuccess(true);
-      setIsEditing(false);
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
+      if (response.success) {
+        updateUser(response.data);
+        setSuccess(true);
+        setIsEditing(false);
+        // Hide success message after 3 seconds
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(response.error || 'Failed to update profile. Please try again.');
+      }
     } catch (err) {
       setError('Failed to update profile. Please try again.');
       console.error('Profile update error:', err);
@@ -246,10 +289,8 @@ const MyProfilePage = () => {
                         type="email"
                         name="email"
                         value={formData.email}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand ${
-                          errors.email ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-500 cursor-not-allowed focus:outline-none"
                       />
                     ) : (
                       <p className="text-gray-800 py-2">{formData.email}</p>

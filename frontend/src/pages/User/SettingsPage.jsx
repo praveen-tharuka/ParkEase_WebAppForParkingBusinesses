@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/Dashboard/DashboardLayout';
+import api from '../../services/api';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,26 +39,52 @@ const SettingsPage = () => {
   });
 
   // Session Management State
-  const [activeSessions, setActiveSessions] = useState([
-    {
-      id: 1,
-      device: 'Windows PC',
-      browser: 'Chrome',
-      ipAddress: '192.168.1.1',
-      location: 'San Francisco, CA',
-      lastActive: '2 minutes ago',
-      isCurrent: true,
-    },
-    {
-      id: 2,
-      device: 'iPhone',
-      browser: 'Safari',
-      ipAddress: '203.0.113.45',
-      location: 'San Francisco, CA',
-      lastActive: '1 day ago',
-      isCurrent: false,
-    },
-  ]);
+  const [activeSessions, setActiveSessions] = useState([]);
+
+  // Load preferences and sessions on mount
+  useEffect(() => {
+    const loadSettingsAndSessions = async () => {
+      if (!user?.id) return;
+      setIsLoading(true);
+      try {
+        const [profileRes, sessionsRes] = await Promise.all([
+          api.usersAPI.getUserProfile(user.id),
+          api.usersAPI.getUserSessions(user.id)
+        ]);
+
+        if (profileRes.success) {
+          const prefs = profileRes.data.preferences;
+          if (prefs) {
+            setNotificationSettings({
+              emailNotifications: prefs.emailNotifications ?? true,
+              smsNotifications: prefs.smsNotifications ?? false,
+              pushNotifications: prefs.pushNotifications ?? true,
+              marketingEmails: prefs.marketingEmails ?? false,
+              reservationReminders: prefs.reservationReminders ?? true,
+              paymentAlerts: prefs.paymentAlerts ?? true,
+            });
+
+            setPrivacySettings({
+              profileVisibility: prefs.profileVisibility ?? 'private',
+              showReservationHistory: prefs.showReservationHistory ?? false,
+              allowDataCollection: prefs.allowDataCollection ?? true,
+              allowThirdPartySharing: prefs.allowThirdPartySharing ?? false,
+            });
+          }
+        }
+
+        if (sessionsRes.success) {
+          setActiveSessions(sessionsRes.data);
+        }
+      } catch (err) {
+        console.error('Failed to load user settings or sessions:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettingsAndSessions();
+  }, [user?.id]);
 
   // Password Change Validation
   const validatePasswordForm = () => {
@@ -116,23 +143,23 @@ const SettingsPage = () => {
 
     setIsLoading(true);
     try {
-      // API call to change password
-      // await api.usersAPI.changePassword({
-      //   currentPassword: passwordForm.currentPassword,
-      //   newPassword: passwordForm.newPassword
-      // });
+      const response = await api.usersAPI.changePassword(
+        user.id,
+        passwordForm.currentPassword,
+        passwordForm.newPassword
+      );
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setSuccess(true);
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-
-      setTimeout(() => setSuccess(false), 3000);
+      if (response.success) {
+        setSuccess(true);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(response.error || 'Failed to change password. Please check your current password.');
+      }
     } catch (err) {
       setError('Failed to change password. Please check your current password.');
       console.error('Password change error:', err);
@@ -161,18 +188,16 @@ const SettingsPage = () => {
     setIsLoading(true);
 
     try {
-      // API calls
-      // if (type === 'notifications') {
-      //   await api.usersAPI.updateNotificationSettings(notificationSettings);
-      // } else if (type === 'privacy') {
-      //   await api.usersAPI.updatePrivacySettings(privacySettings);
-      // }
+      const payload = type === 'notifications' ? notificationSettings : privacySettings;
+      const response = await api.usersAPI.updateUserProfile(user.id, payload);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      if (response.success) {
+        updateUser(response.data);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(response.error || 'Failed to save settings. Please try again.');
+      }
     } catch (err) {
       setError('Failed to save settings. Please try again.');
       console.error('Settings save error:', err);
@@ -181,25 +206,37 @@ const SettingsPage = () => {
     }
   };
 
-  const handleLogoutSession = (sessionId) => {
-    setActiveSessions(prev => prev.filter(session => session.id !== sessionId));
+  const handleLogoutSession = async (sessionId) => {
+    if (window.confirm('Are you sure you want to log out of this session?')) {
+      setIsLoading(true);
+      try {
+        const response = await api.usersAPI.deleteSession(user.id, sessionId);
+        if (response.success) {
+          setActiveSessions(prev => prev.filter(session => session.id !== sessionId));
+        } else {
+          setError(response.error || 'Failed to revoke session.');
+        }
+      } catch (err) {
+        setError('Failed to revoke session.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleLogoutAllSessions = async () => {
-    if (window.confirm('Are you sure? You will be logged out from all devices.')) {
+    if (window.confirm('Are you sure? You will be logged out from all other devices.')) {
       setIsLoading(true);
       try {
-        // API call to logout all sessions
-        // await api.authAPI.logoutAllSessions();
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Logout user
-        logout();
-        navigate('/login');
+        const response = await api.usersAPI.deleteAllSessions(user.id);
+        if (response.success) {
+          setActiveSessions(prev => prev.filter(session => session.isCurrent));
+        } else {
+          setError(response.error || 'Failed to logout from other sessions.');
+        }
       } catch (err) {
-        setError('Failed to logout from all sessions.');
+        setError('Failed to logout from other sessions.');
         console.error('Logout all error:', err);
       } finally {
         setIsLoading(false);
@@ -214,14 +251,13 @@ const SettingsPage = () => {
         if (confirmation === 'DELETE') {
           setIsLoading(true);
           try {
-            // API call to delete account
-            // await api.usersAPI.deleteAccount();
-
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            logout();
-            navigate('/');
+            const response = await api.usersAPI.deleteAccount(user.id);
+            if (response.success) {
+              logout();
+              navigate('/');
+            } else {
+              setError(response.error || 'Failed to delete account. Please try again.');
+            }
           } catch (err) {
             setError('Failed to delete account. Please try again.');
             console.error('Account deletion error:', err);
@@ -232,6 +268,7 @@ const SettingsPage = () => {
       }
     }
   };
+
 
   return (
     <DashboardLayout>
@@ -634,7 +671,7 @@ const SettingsPage = () => {
                           {session.browser} • {session.location}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          IP: {session.ipAddress} • Last active: {session.lastActive}
+                          IP: {session.ipAddress} • Last active: {new Date(session.lastActive).toLocaleString()}
                         </p>
                       </div>
                       {!session.isCurrent && (
@@ -686,15 +723,21 @@ const SettingsPage = () => {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Account Created:</span>
-                        <span className="font-medium">January 15, 2025</span>
+                        <span className="font-medium">
+                          {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Last Login:</span>
-                        <span className="font-medium">Today at 2:30 PM</span>
+                        <span className="font-medium">
+                          {user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Just now'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Account Status:</span>
-                        <span className="font-medium text-green-600">Active</span>
+                        <span className="font-medium text-green-600 capitalize">
+                          {user?.accountStatus?.toLowerCase() || 'Active'}
+                        </span>
                       </div>
                     </div>
                   </div>
