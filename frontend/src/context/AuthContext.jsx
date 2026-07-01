@@ -103,8 +103,10 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     isAuthenticated: !!user,
     loading,
-    isAdmin: user?.role === 'admin' || user?.role === 'ADMIN',
+    isAdmin: user?.role?.toUpperCase() === 'ADMIN',
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
+export default AuthContext
