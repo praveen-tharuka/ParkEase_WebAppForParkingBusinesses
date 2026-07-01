@@ -3,8 +3,8 @@
  * This service handles all API calls to the backend
  * Currently configured for mock data, ready for backend integration
  */
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 const API_TIMEOUT = 30000
 
 // Helper function for API calls with error handling

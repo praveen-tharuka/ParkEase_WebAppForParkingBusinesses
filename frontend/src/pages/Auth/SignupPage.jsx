@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
+import { authAPI } from "../../services/api";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const SignupPage = () => {
     confirmPassword: '',
   })
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -60,17 +62,41 @@ const SignupPage = () => {
     return newErrors
   }
 
-  const handleSignup = (e) => {
-    e.preventDefault()
-    const newErrors = validateForm()
+  const handleSignup = async (e) => {
+  e.preventDefault()
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
+  const newErrors = validateForm()
 
-    navigate('/signup-success')
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    return
   }
+
+  setLoading(true)
+
+  try {
+    const response = await authAPI.signup({
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+    })
+
+    if (response.success) {
+      navigate("/signup-success")
+    } else {
+      alert(response.error || "Signup failed.")
+    }
+  } catch (error) {
+    console.error("Signup Error:", error)
+
+    alert(
+      error.response?.data?.message ||
+      "Unable to create account. Please try again."
+    )
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <div className="min-h-screen flex flex-col">

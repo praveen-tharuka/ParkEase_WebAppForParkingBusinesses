@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { mockUser, mockAdmin, MOCK_CREDENTIALS, MOCK_ADMIN_CREDENTIALS } from '../../data/mockUserData'
+import { authAPI } from '../../services/api'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
@@ -34,7 +35,7 @@ const LoginPage = () => {
     return newErrors
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     const newErrors = validateForm()
 
@@ -43,33 +44,46 @@ const LoginPage = () => {
       return
     }
 
-    if (loginType === 'user') {
-      // Check against mock user credentials
-      const emailMatch = email.toLowerCase().trim() === MOCK_CREDENTIALS.email.toLowerCase() || 
-                          email.toLowerCase().trim() === 'praveen'
-      const passwordMatch = password === MOCK_CREDENTIALS.password
+    setLoading(true)
 
-      if (emailMatch && passwordMatch) {
-        // Authenticate the user and navigate to dashboard
-        login(mockUser)
-        navigate('/user-dashboard')
-      } else {
-        navigate('/login-error')
-      }
-    } else if (loginType === 'admin') {
-      // Check against mock admin credentials
-      const emailMatch = email.toLowerCase().trim() === MOCK_ADMIN_CREDENTIALS.email.toLowerCase() || 
-                          email.toLowerCase().trim() === 'admin'
-      const passwordMatch = password === MOCK_ADMIN_CREDENTIALS.password
+try {
 
-      if (emailMatch && passwordMatch) {
-        // Authenticate the admin and navigate to admin dashboard
-        login(mockAdmin)
-        navigate('/admin-dashboard')
-      } else {
-        navigate('/login-error')
-      }
+    const response = await authAPI.login({
+        email,
+        password
+    })
+
+    if (response.success) {
+
+        login(
+            response.data.user,
+            response.data.accessToken,
+            response.data.refreshToken
+        )
+
+        if (response.data.user.role?.toUpperCase() === "ADMIN") {
+    navigate("/admin-dashboard")
+} else {
+    navigate("/user-dashboard")
+}
+
+    } else {
+
+        navigate("/login-error")
+
     }
+
+} catch (error) {
+
+    console.error(error)
+    navigate("/login-error")
+
+} finally {
+
+    setLoading(false)
+
+}
+
   }
 
   const clearForm = () => {
@@ -185,30 +199,12 @@ const LoginPage = () => {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
             >
               Login as {loginType === 'user' ? 'User' : 'Admin'}
             </button>
 
-            {/* Demo Credentials */}
-            <div className={`border rounded-lg p-3 text-sm ${
-              loginType === 'user'
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-purple-50 border-purple-200 text-purple-700'
-            }`}>
-              <p className="font-semibold">Demo Credentials:</p>
-              {loginType === 'user' ? (
-                <>
-                  <p>Email: praveen@parkease.com | Password: password123</p>
-                  <p className="mt-1 text-xs">Or use username: praveen</p>
-                </>
-              ) : (
-                <>
-                  <p>Email: admin@parkease.com | Password: admin123</p>
-                  <p className="mt-1 text-xs">Or use username: admin</p>
-                </>
-              )}
-            </div>
           </form>
 
           {loginType === 'user' && (

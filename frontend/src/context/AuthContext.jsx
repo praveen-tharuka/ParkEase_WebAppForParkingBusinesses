@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { authAPI } from '../services/api'
 
 const AuthContext = createContext(null)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
+
   return context
 }
 
@@ -15,40 +18,90 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored auth state on mount
-    const storedUser = localStorage.getItem('parkease_user')
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error('Error parsing stored user data:', error)
-        localStorage.removeItem('parkease_user')
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('parkease_token')
+
+      if (!token) {
+        setLoading(false)
+        return
       }
+
+      try {
+        const response = await authAPI.getCurrentUser()
+
+        if (response.success) {
+          setUser(response.data)
+
+          localStorage.setItem(
+            'parkease_user',
+            JSON.stringify(response.data)
+          )
+        } else {
+          localStorage.removeItem('parkease_token')
+          localStorage.removeItem('parkease_user')
+          localStorage.removeItem('parkease_refresh_token')
+        }
+      } catch (error) {
+        console.error('Authentication check failed:', error)
+
+        localStorage.removeItem('parkease_token')
+        localStorage.removeItem('parkease_user')
+        localStorage.removeItem('parkease_refresh_token')
+      }
+
+      setLoading(false)
     }
-    setLoading(false)
+
+    initializeAuth()
   }, [])
 
-  const login = (userData) => {
+  const login = (userData, accessToken, refreshToken) => {
     setUser(userData)
-    localStorage.setItem('parkease_user', JSON.stringify(userData))
+
+    localStorage.setItem(
+      'parkease_user',
+      JSON.stringify(userData)
+    )
+
+    localStorage.setItem(
+      'parkease_token',
+      accessToken
+    )
+
+    localStorage.setItem(
+      'parkease_refresh_token',
+      refreshToken
+    )
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authAPI.logout()
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+
     setUser(null)
+
     localStorage.removeItem('parkease_user')
+    localStorage.removeItem('parkease_token')
+    localStorage.removeItem('parkease_refresh_token')
   }
 
   const value = {
     user,
     login,
     logout,
-    isAuthenticated: !!user,
     loading,
-    isAdmin: user?.role === 'admin',
+    isAuthenticated: !!user,
+    isAdmin: user?.role?.toUpperCase() === 'ADMIN',
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-
-
+export default AuthContext
