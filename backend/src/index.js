@@ -11,6 +11,9 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const slotsRoutes = require('./slots/slots.routes');
 const reservationsRoutes = require('./reservations/reservations.routes');
+const walkinRoutes = require('./routes/walkinRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +37,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/slots', slotsRoutes);
 app.use('/api/reservations', reservationsRoutes);
+app.use('/api/walkins', walkinRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/reservations', ticketRoutes);
 
 // 404 handler
 app.use((req, res) => {
