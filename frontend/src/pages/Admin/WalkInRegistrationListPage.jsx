@@ -1,23 +1,70 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminDashboardLayout from '../../components/Admin/AdminDashboardLayout'
-import { mockWalkInRegistrations } from '../../data/mockWalkInRegistrations'
+import api from '../../services/api'
+const { walkinsAPI } = api
 
 const WalkInRegistrationListPage = () => {
-  const [registrations, setRegistrations] = useState(mockWalkInRegistrations)
+  const [registrations, setRegistrations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
 
-  const filteredRegistrations = filterStatus === 'all' 
-    ? registrations 
-    : registrations.filter(reg => reg.status === filterStatus)
-
-  const handleRemoveVehicle = (id) => {
-    setRegistrations(registrations.filter(reg => reg.id !== id))
+  const fetchWalkins = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await walkinsAPI.getWalkIns({ status: filterStatus })
+      if (response.success && response.data) {
+        const rawWalkins = Array.isArray(response.data)
+          ? response.data
+          : (response.data.data || [])
+        setRegistrations(rawWalkins)
+      } else {
+        setError(response.error || 'Failed to load walk-in registrations')
+      }
+    } catch (err) {
+      console.error('Fetch Walk-Ins Error:', err)
+      setError('An error occurred while loading walk-ins')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleCheckout = (id) => {
-    setRegistrations(registrations.map(reg => 
-      reg.id === id ? { ...reg, status: 'completed', checkoutTime: new Date().toLocaleTimeString() } : reg
-    ))
+  useEffect(() => {
+    fetchWalkins()
+  }, [filterStatus])
+
+  const filteredRegistrations = registrations
+
+  const handleRemoveVehicle = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this walk-in registration?')) {
+      return
+    }
+    try {
+      const response = await walkinsAPI.deleteWalkIn(id)
+      if (response.success) {
+        setRegistrations(prev => prev.filter(reg => reg.id !== id))
+      } else {
+        alert(response.error || 'Failed to remove walk-in registration')
+      }
+    } catch (err) {
+      console.error('Delete Walk-In Error:', err)
+      alert('An error occurred while removing walk-in')
+    }
+  }
+
+  const handleCheckout = async (id) => {
+    try {
+      const response = await walkinsAPI.checkoutWalkIn(id)
+      if (response.success) {
+        fetchWalkins()
+      } else {
+        alert(response.error || 'Failed to checkout vehicle')
+      }
+    } catch (err) {
+      console.error('Checkout Error:', err)
+      alert('An error occurred during checkout')
+    }
   }
 
   const statusColors = {
@@ -95,7 +142,25 @@ const WalkInRegistrationListPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRegistrations.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex justify-center items-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading walk-in registrations...
+                      </div>
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-red-500 font-medium">
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredRegistrations.length > 0 ? (
                   filteredRegistrations.map(registration => (
                     <tr key={registration.id} className="border-b hover:bg-gray-50 transition">
                       <td className="px-6 py-4">

@@ -10,6 +10,7 @@
 import { PrismaClient, Role, AccountStatus, SlotType, SlotStatus, VehicleStatus, ReservationStatus, AllocationType, TicketStatus, PaymentMethod, PaymentStatus, ReportType, ReportFormat, ApprovalStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/parkease?schema=public',
@@ -24,9 +25,9 @@ function generateId(prefix: string, num: number): string {
   return `${prefix}-${String(num).padStart(4, '0')}`;
 }
 
-// Simple hash placeholder — backend team should replace with bcrypt
+// Generate real bcrypt hashes for database seeding
 function fakePasswordHash(plain: string): string {
-  return `hashed_${plain}_replace_with_bcrypt`;
+  return bcrypt.hashSync(plain, 10);
 }
 
 // ---------------------------------------------------------------------------
