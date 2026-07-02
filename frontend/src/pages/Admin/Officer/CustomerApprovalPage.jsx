@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import AdminDashboardLayout from '../../../components/Admin/AdminDashboardLayout'
-import { officerPendingRegistrations } from '../../../data/officerManagementData'
+import api from '../../../services/api'
+
+const { approvalsAPI } = api
 
 // Tailwind styles for approval status badges (Pending, Approved, Rejected)
 const statusStyles = {
@@ -11,14 +13,53 @@ const statusStyles = {
 
 // Page for reviewing and approving pending customer registrations
 const CustomerApprovalPage = () => {
-  // State: search input, status filter, and pending registrations list
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('Pending')
-  const [items, setItems] = useState(officerPendingRegistrations)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const fetchApprovals = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await approvalsAPI.getPendingApprovals({ status: selectedStatus })
+      if (response.success && response.data) {
+        setItems(response.data)
+      } else {
+        setError(response.error || 'Failed to load registrations')
+      }
+    } catch (err) {
+      console.error('Fetch Approvals Error:', err)
+      setError('An error occurred while loading approvals')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchApprovals()
+  }, [selectedStatus])
 
   // Filter registrations based on search and approval status
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    return items.map(item => ({
+      id: item.id,
+      customerId: item.requestedById,
+      name: item.requestedBy?.fullName || 'Unknown Customer',
+      email: item.requestedBy?.email || '—',
+      phone: item.requestedBy?.phone || '—',
+      requestedAt: new Date(item.requestedAt).toLocaleString(),
+      vehicle: {
+        plate: item.vehiclePlate || '—',
+        type: item.vehicleTypeName || '—',
+        color: item.vehicleColor || '—',
+        make: item.vehicleMake || '—',
+      },
+      documents: item.documents?.map(d => d.documentType) || [],
+      notes: item.notes || 'No notes provided.',
+      approvalStatus: item.status === 'PENDING' ? 'Pending' : item.status === 'APPROVED' ? 'Approved' : 'Rejected'
+    })).filter((item) => {
       const matchesSearch = [item.name, item.email, item.vehicle.plate, item.vehicle.make]
         .join(' ')
         .toLowerCase()
@@ -28,11 +69,30 @@ const CustomerApprovalPage = () => {
     })
   }, [items, searchTerm, selectedStatus])
 
-  // Handle approval/rejection: update status in local state
-  const updateStatus = (id, approvalStatus) => {
-    setItems((currentItems) =>
-      currentItems.map((item) => (item.id === id ? { ...item, approvalStatus } : item)),
-    )
+  // Handle approval/rejection: update status in database
+  const updateStatus = async (id, approvalStatus) => {
+    try {
+      let response;
+      if (approvalStatus === 'Approved') {
+        response = await approvalsAPI.approveRegistration(id);
+      } else if (approvalStatus === 'Rejected') {
+        const reason = window.prompt('Enter rejection reason:') || 'Documents invalid or incomplete';
+        response = await approvalsAPI.rejectRegistration(id, reason);
+      } else {
+        alert('Resetting status is not supported on the live database.');
+        return;
+      }
+
+      if (response && response.success) {
+        alert(`Registration updated to ${approvalStatus}`);
+        fetchApprovals();
+      } else {
+        alert(response?.error || 'Failed to update status');
+      }
+    } catch (err) {
+      console.error('Update Status Error:', err)
+      alert('An error occurred while updating status')
+    }
   }
 
   return (
@@ -82,17 +142,21 @@ const CustomerApprovalPage = () => {
         </div>
 
         <div className="space-y-4">
-          {filteredItems.map((item) => (
+          {loading ? (
+            <div className="py-12 text-center text-gray-500">Loading registrations...</div>
+          ) : error ? (
+            <div className="py-12 text-center text-red-500 font-semibold">{error}</div>
+          ) : filteredItems.map((item) => (
             <div key={item.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className="space-y-3">
+                <div className="space-y-3 w-full">
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-semibold text-gray-900">{item.name}</h2>
-                    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[item.approvalStatus]}`}>
+                    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[item.approvalStatus] || 'bg-gray-150 text-gray-700'}`}>
                       {item.approvalStatus}
                     </span>
-                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                      {item.customerId}
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 break-all">
+                      Request ID: {item.id}
                     </span>
                   </div>
 
@@ -100,14 +164,14 @@ const CustomerApprovalPage = () => {
                     <InfoCell label="Email" value={item.email} />
                     <InfoCell label="Phone" value={item.phone} />
                     <InfoCell label="Requested" value={item.requestedAt} />
-                    <InfoCell label="Vehicle" value={`${item.vehicle.make} ${item.vehicle.type}`} />
+                    <InfoCell label="Vehicle Type" value={item.vehicle.type} />
                   </div>
 
                   <div className="grid gap-3 lg:grid-cols-2">
                     <div className="rounded-xl bg-gray-50 p-4">
                       <p className="text-sm font-semibold text-gray-700 mb-2">Vehicle Summary</p>
-                      <p className="text-gray-600">
-                        {item.vehicle.plate} · {item.vehicle.color} · {item.vehicle.make}
+                      <p className="text-gray-600 uppercase font-semibold">
+                        {item.vehicle.plate} <span className="font-normal text-sm capitalize">· {item.vehicle.color} · {item.vehicle.make}</span>
                       </p>
                     </div>
                     <div className="rounded-xl bg-gray-50 p-4">
@@ -124,35 +188,35 @@ const CustomerApprovalPage = () => {
                           {doc}
                         </span>
                       ))}
+
+                      {item.documents.length === 0 && (
+                        <span className="text-sm text-gray-500 italic">No documents uploaded</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 shrink-0 xl:w-52">
-                  <button
-                    onClick={() => updateStatus(item.id, 'Approved')}
-                    className="rounded-xl bg-brand px-4 py-3 font-semibold text-white transition hover:opacity-90"
-                  >
-                    Approve Registration
-                  </button>
-                  <button
-                    onClick={() => updateStatus(item.id, 'Rejected')}
-                    className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 font-semibold text-rose-700 transition hover:bg-rose-100"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => updateStatus(item.id, 'Pending')}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
-                  >
-                    Reset to Pending
-                  </button>
-                </div>
+                {item.approvalStatus === 'Pending' && (
+                  <div className="flex flex-col gap-3 shrink-0 xl:w-52 w-full mt-4 xl:mt-0">
+                    <button
+                      onClick={() => updateStatus(item.id, 'Approved')}
+                      className="rounded-xl bg-brand px-4 py-3 font-semibold text-white transition hover:opacity-90"
+                    >
+                      Approve Registration
+                    </button>
+                    <button
+                      onClick={() => updateStatus(item.id, 'Rejected')}
+                      className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 font-semibold text-rose-700 transition hover:bg-rose-100"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
 
-          {filteredItems.length === 0 && (
+          {!loading && !error && filteredItems.length === 0 && (
             <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 py-16 text-center text-gray-500">
               No registrations match your search criteria.
             </div>

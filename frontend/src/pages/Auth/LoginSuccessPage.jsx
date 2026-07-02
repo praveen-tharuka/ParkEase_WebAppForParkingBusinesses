@@ -1,21 +1,21 @@
 import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { mockUser } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
 const LoginSuccessPage = () => {
   const navigate = useNavigate()
-  const { login, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
   // Ensure user is authenticated when they reach this page
   // This is a safety check in case they navigate directly
+
   useEffect(() => {
-    if (!isAuthenticated) {
-      login(mockUser)
-    }
-  }, [isAuthenticated, login])
+  if (!isAuthenticated) {
+    navigate("/login")
+  }
+}, [isAuthenticated, navigate])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,7 +41,9 @@ const LoginSuccessPage = () => {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+  Welcome Back{user ? `, ${user.fullName || user.name}` : ""}!
+</h1>
               <p className="text-gray-600">
                 You have successfully logged into your ParkEase account. You're all set to find and reserve parking.
               </p>
@@ -57,11 +59,17 @@ const LoginSuccessPage = () => {
             </div>
 
             <button
-              onClick={() => navigate('/user-dashboard')}
-              className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
-            >
-              Go to Dashboard
-            </button>
+  onClick={() => {
+    if (user?.role === "ADMIN") {
+      navigate("/admin-dashboard")
+    } else {
+      navigate("/user-dashboard")
+    }
+  }}
+  className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
+>
+  Go to Dashboard
+</button>
 
             <Link
               to="/"

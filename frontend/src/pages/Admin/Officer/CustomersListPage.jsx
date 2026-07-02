@@ -1,7 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import AdminDashboardLayout from '../../../components/Admin/AdminDashboardLayout'
-import { customerStatusOptions, officerCustomers } from '../../../data/officerManagementData'
+import api from '../../../services/api'
+
+const { usersAPI } = api
+
+const customerStatusOptions = ['All', 'Approved', 'Pending Approval', 'Suspended']
+
+const mapStatusToDisplay = (status) => {
+  if (status === 'ACTIVE') return 'Approved'
+  if (status === 'PENDING_APPROVAL') return 'Pending Approval'
+  if (status === 'SUSPENDED') return 'Suspended'
+  return status
+}
 
 // Tailwind styles for customer status badges (Approved, Pending, Suspended)
 const badgeStyles = {
@@ -16,10 +27,46 @@ const CustomersListPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [sortBy, setSortBy] = useState('name')
+  const [customers, setCustomers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setLoading(true)
+      try {
+        const response = await usersAPI.listUsers({ role: 'CUSTOMER' })
+        if (response.success && response.data) {
+          setCustomers(response.data)
+        } else {
+          setError(response.error || 'Failed to load customers')
+        }
+      } catch (err) {
+        console.error('Fetch Customers Error:', err)
+        setError('An error occurred while loading customers')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCustomers()
+  }, [])
 
   // Filter and sort customers based on search, status, and sort option
   const filteredCustomers = useMemo(() => {
-    return [...officerCustomers]
+    return [...customers]
+      .map(c => ({
+        id: c.id,
+        name: c.fullName,
+        email: c.email,
+        phone: c.phone || '—',
+        company: c.company || '—',
+        address: c.address || '—',
+        status: mapStatusToDisplay(c.accountStatus),
+        vehiclesCount: c.vehicles?.length || 0,
+        reservationsCount: c.reservations?.length || 0,
+        joinedAt: new Date(c.registrationDate || c.createdAt).toLocaleDateString(),
+        lastVisit: c.lastLoginAt ? new Date(c.lastLoginAt).toLocaleDateString() : '—'
+      }))
       .filter((customer) => {
         const combined = [
           customer.name,
@@ -36,11 +83,11 @@ const CustomersListPage = () => {
         return matchesSearch && matchesStatus
       })
       .sort((a, b) => {
-        if (sortBy === 'visits') return b.lifetimeVisits - a.lifetimeVisits
-        if (sortBy === 'vehicles') return b.vehicles - a.vehicles
+        if (sortBy === 'visits') return b.reservationsCount - a.reservationsCount
+        if (sortBy === 'vehicles') return b.vehiclesCount - a.vehiclesCount
         return a.name.localeCompare(b.name)
       })
-  }, [searchTerm, statusFilter, sortBy])
+  }, [customers, searchTerm, statusFilter, sortBy])
 
   return (
     <AdminDashboardLayout>
@@ -54,9 +101,9 @@ const CustomersListPage = () => {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <StatCard label="Customers" value={officerCustomers.length} />
-            <StatCard label="Approved" value={officerCustomers.filter((customer) => customer.status === 'Approved').length} />
-            <StatCard label="Pending" value={officerCustomers.filter((customer) => customer.status === 'Pending Approval').length} />
+            <StatCard label="Customers" value={customers.length} />
+            <StatCard label="Approved" value={customers.filter((customer) => customer.accountStatus === 'ACTIVE').length} />
+            <StatCard label="Pending" value={customers.filter((customer) => customer.accountStatus === 'PENDING_APPROVAL').length} />
           </div>
         </div>
 
@@ -135,7 +182,19 @@ const CustomersListPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
-                {filteredCustomers.map((customer) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                      Loading customer directory...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-red-500 font-medium">
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50/70">
                     <Td>
                       <p className="font-semibold text-gray-900">{customer.name}</p>
@@ -146,13 +205,13 @@ const CustomersListPage = () => {
                       <p className="text-sm text-gray-500">{customer.phone}</p>
                     </Td>
                     <Td>
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyles[customer.status]}`}>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyles[customer.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
                         {customer.status}
                       </span>
                     </Td>
                     <Td>
-                      <p className="font-semibold text-gray-900">{customer.vehicles}</p>
-                      <p className="text-sm text-gray-500">Lifetime visits: {customer.lifetimeVisits}</p>
+                      <p className="font-semibold text-gray-900">{customer.vehiclesCount}</p>
+                      <p className="text-sm text-gray-500">Lifetime visits: {customer.reservationsCount}</p>
                     </Td>
                     <Td>
                       <p className="font-medium text-gray-900">{customer.lastVisit}</p>
@@ -172,7 +231,7 @@ const CustomersListPage = () => {
             </table>
           </div>
 
-          {filteredCustomers.length === 0 && (
+          {!loading && !error && filteredCustomers.length === 0 && (
             <div className="py-16 text-center text-gray-500">No customers match your search or filter.</div>
           )}
         </div>

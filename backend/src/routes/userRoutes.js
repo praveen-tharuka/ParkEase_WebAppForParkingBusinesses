@@ -8,12 +8,49 @@ const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'parkease_secret_key_12345';
 
+// GET /api/users
+router.get('/', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin or Officer access only' });
+    }
+
+    const { role, accountStatus } = req.query;
+    const where = {};
+    if (role) where.role = role;
+    if (accountStatus) where.accountStatus = accountStatus;
+
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        vehicles: {
+          include: {
+            vehicleType: true
+          }
+        },
+        reservations: true
+      },
+      orderBy: { fullName: 'asc' }
+    });
+
+    const sanitizedUsers = users.map(user => {
+      const { passwordHash, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    return res.status(200).json(sanitizedUsers);
+  } catch (error) {
+    console.error('List Users Error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 // GET /api/users/:id
 router.get('/:id', protect, async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (req.user.id !== id && req.user.role !== 'ADMIN') {
+    if (req.user.id !== id && req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
       return res.status(403).json({ success: false, error: 'Forbidden: You cannot access other users profiles' });
     }
 
@@ -24,6 +61,25 @@ router.get('/:id', protect, async (req, res) => {
         sessions: {
           where: { isRevoked: false, expiresAt: { gt: new Date() } },
           orderBy: { lastActiveAt: 'desc' }
+        },
+        vehicles: {
+          include: {
+            vehicleType: true
+          }
+        },
+        reservations: {
+          include: {
+            slot: {
+              include: {
+                location: true
+              }
+            },
+            vehicle: true
+          },
+          orderBy: { startTime: 'desc' }
+        },
+        activities: {
+          orderBy: { occurredAt: 'desc' }
         }
       }
     });
@@ -324,6 +380,56 @@ router.get('/:id/reservations', protect, async (req, res) => {
     return res.status(200).json(reservations);
   } catch (error) {
     console.error('Get User Reservations Error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/users/:id/suspend
+router.patch('/:id/suspend', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin or Officer access only' });
+    }
+
+    const { id } = req.params;
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        accountStatus: 'SUSPENDED',
+        isActive: false
+      }
+    });
+
+    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    return res.status(200).json({ success: true, user: userWithoutPassword });
+  } catch (error) {
+    console.error('Suspend User Error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/users/:id/activate
+router.patch('/:id/activate', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin or Officer access only' });
+    }
+
+    const { id } = req.params;
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        accountStatus: 'ACTIVE',
+        isActive: true
+      }
+    });
+
+    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    return res.status(200).json({ success: true, user: userWithoutPassword });
+  } catch (error) {
+    console.error('Activate User Error:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });

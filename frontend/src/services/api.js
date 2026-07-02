@@ -3,9 +3,9 @@
  * This service handles all API calls to the backend
  * Currently configured for mock data, ready for backend integration
  */
-
-const API_BASE_URL = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) || 'http://localhost:3000/api';
-const API_TIMEOUT = 30000;
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_TIMEOUT = 30000
 
 // Helper function for API calls with error handling
 async function apiCall(endpoint, options = {}) {
@@ -48,11 +48,18 @@ async function apiCall(endpoint, options = {}) {
 
     clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`)
+    let data = null
+    try {
+      data = await response.json()
+    } catch (e) {
+      // Response was not JSON
     }
 
-    const data = await response.json()
+    if (!response.ok) {
+      const errMsg = data?.message || data?.error || response.statusText
+      throw new Error(errMsg)
+    }
+
     return { success: true, data }
   } catch (error) {
     console.error(`API Call Failed: ${endpoint}`, error)
@@ -319,6 +326,14 @@ export const vehiclesAPI = {
 // USERS ENDPOINTS
 // ============================================
 export const usersAPI = {
+  listUsers: async (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return apiCall(`/users?${queryParams}`, {
+      method: 'GET',
+      requiresAuth: true,
+    });
+  },
+
   getUserProfile: async (userId) => {
     return apiCall(`/users/${userId}`, {
       method: 'GET',

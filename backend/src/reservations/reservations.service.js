@@ -67,6 +67,11 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
     throw err;
   }
 
+  // Sanitize IDs to String to prevent database type casting errors
+  const sanitizedCustomerId = String(customerId);
+  const sanitizedSlotId = String(slotId);
+  const sanitizedVehicleId = String(vehicleId);
+
   const start = new Date(startTime);
   const end = new Date(endTime);
   if (isNaN(start) || isNaN(end) || start >= end) {
@@ -75,7 +80,31 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
     throw err;
   }
 
-  const slot = await prisma.parkingSlot.findUnique({ where: { id: slotId } });
+  // Resolve slot (with fallback mapping for frontend mock slot IDs)
+  let slot = null;
+  if (sanitizedSlotId.length > 5) {
+    slot = await prisma.parkingSlot.findUnique({ where: { id: sanitizedSlotId } });
+  }
+  
+  if (!slot) {
+    const mockSlotNumbers = {
+      '1': 'A-101',
+      '2': 'A-102',
+      '3': 'B-201',
+      '4': 'B-202',
+      '5': 'M-301',
+      '6': 'M-302',
+      '7': 'T-401',
+      '8': 'V-501',
+      '9': 'A-103',
+      '10': 'A-104',
+      '11': 'B-203',
+      '12': 'M-303'
+    };
+    const slotNo = mockSlotNumbers[sanitizedSlotId] || sanitizedSlotId;
+    slot = await prisma.parkingSlot.findUnique({ where: { slotNumber: slotNo } });
+  }
+
   if (!slot) {
     const err = new Error('Slot not found');
     err.statusCode = 404;
@@ -87,14 +116,44 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
     throw err;
   }
 
-  const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+  // Resolve vehicle (with fallback mapping for frontend mock vehicle IDs)
+  let vehicle = null;
+  if (sanitizedVehicleId.length > 5) {
+    vehicle = await prisma.vehicle.findUnique({ where: { id: sanitizedVehicleId } });
+  }
+
+  if (!vehicle) {
+    const mockVehiclePlates = {
+      '1': 'ABC-1234',
+      '2': 'XYZ-5678'
+    };
+    const plate = mockVehiclePlates[sanitizedVehicleId] || sanitizedVehicleId;
+    vehicle = await prisma.vehicle.findUnique({ where: { plateNumber: plate } });
+  }
+
   if (!vehicle) {
     const err = new Error('Vehicle not found');
     err.statusCode = 404;
     throw err;
   }
 
-  const available = await isSlotAvailable(slotId, start, end);
+  // Resolve customer (with fallback mapping for frontend mock user IDs)
+  let customer = await prisma.user.findUnique({ where: { id: sanitizedCustomerId } });
+  if (!customer) {
+    // If customer is mock user with id 1, map to seeded Praveen user
+    if (sanitizedCustomerId === '1' || sanitizedCustomerId === '101') {
+      const email = sanitizedCustomerId === '101' ? 'admin@parkease.com' : 'praveen@parkease.com';
+      customer = await prisma.user.findFirst({ where: { email } });
+    }
+  }
+
+  if (!customer) {
+    const err = new Error('Customer not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const available = await isSlotAvailable(slot.id, start, end);
   if (!available) {
     const err = new Error('Slot is not available for the selected time range');
     err.statusCode = 409;
@@ -106,9 +165,9 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
   const reservation = await prisma.reservation.create({
     data: {
       reservationCode: generateReservationCode(),
-      customerId,
-      slotId,
-      vehicleId,
+      customerId: customer.id,
+      slotId: slot.id,
+      vehicleId: vehicle.id,
       startTime: start,
       endTime: end,
       specialRequests: specialRequests || null,
@@ -123,7 +182,7 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
   });
 
   await prisma.parkingSlot.update({
-    where: { id: slotId },
+    where: { id: slot.id },
     data: { status: 'RESERVED' },
   });
 
@@ -133,7 +192,17 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
 async function getReservationById(id) {
   return prisma.reservation.findUnique({
     where: { id },
-    include: { slot: true, vehicle: true, customer: true, ticket: true, payments: true },
+    include: { 
+      slot: {
+        include: {
+          location: true
+        }
+      }, 
+      vehicle: true, 
+      customer: true, 
+      ticket: true, 
+      payments: true 
+    },
   });
 }
 
@@ -144,7 +213,15 @@ async function listReservations({ customerId, status }) {
 
   return prisma.reservation.findMany({
     where,
-    include: { slot: true, vehicle: true },
+    include: {
+      slot: {
+        include: {
+          location: true
+        }
+      },
+      vehicle: true,
+      customer: true
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

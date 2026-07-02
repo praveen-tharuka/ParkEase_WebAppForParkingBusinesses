@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
+import { useAuth } from '../../context/AuthContext'
+import { reservationsAPI } from '../../services/api'
 
 const ReservationConfirm = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const reservationData = location.state?.reservationData || null
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -40,10 +43,28 @@ const ReservationConfirm = () => {
 
     setIsProcessing(true)
 
-    // Simulate payment processing
-    setTimeout(() => {
-      navigate('/reservation/success')
-    }, 1500)
+    try {
+      const response = await reservationsAPI.createReservation({
+        customerId: user?.id,
+        slotId: selectedSlot.id,
+        vehicleId: selectedVehicle.id,
+        startTime: reservationData.startTimeISO,
+        endTime: reservationData.endTimeISO,
+        specialRequests: formData.specialRequests || '',
+        notes: formData.notes || '',
+      })
+
+      if (response.success) {
+        navigate('/reservation/success')
+      } else {
+        alert(response.error || 'Failed to create reservation')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('An unexpected error occurred while creating the reservation.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (

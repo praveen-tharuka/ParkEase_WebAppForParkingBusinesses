@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
+import { authAPI } from "../../services/api";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -75,8 +76,8 @@ const SignupPage = () => {
     setIsSubmitting(true)
     try {
       const response = await signup({
-        fullName: formData.fullName,
-        email: formData.email,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
         password: formData.password,
       })
 

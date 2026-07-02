@@ -1,28 +1,93 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import AdminDashboardLayout from '../../../components/Admin/AdminDashboardLayout'
-import { officerVehicles, vehicleStatusOptions } from '../../../data/officerManagementData'
+import api from '../../../services/api'
 
-// Tailwind styles for vehicle status badges (Active, Pending, Suspended)
+const { vehiclesAPI } = api
+
 const badgeStyles = {
   Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   Pending: 'bg-amber-50 text-amber-700 border-amber-200',
   Suspended: 'bg-rose-50 text-rose-700 border-rose-200',
 }
 
+const mapStatusToDisplay = (status) => {
+  if (status === 'ACTIVE') return 'Active'
+  if (status === 'PENDING') return 'Pending'
+  return 'Suspended'
+}
+
 // Page for searching vehicles and managing their status and assignments
 const VehicleManagementPage = () => {
-  // State: search input, status filter, and vehicle type filter
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
+  const [vehicles, setVehicles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const fetchVehicles = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await vehiclesAPI.getUserVehicles()
+      if (response.success && response.data) {
+        setVehicles(response.data)
+      } else {
+        setError(response.error || 'Failed to load vehicle directory')
+      }
+    } catch (err) {
+      console.error('Fetch Vehicles Error:', err)
+      setError('An error occurred while loading vehicles')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
+
+  const handleVerify = async (id) => {
+    try {
+      const response = await vehiclesAPI.verifyVehicle(id)
+      if (response.success) {
+        alert('Vehicle verified successfully')
+        fetchVehicles()
+      } else {
+        alert(response.error || 'Failed to verify vehicle')
+      }
+    } catch (err) {
+      console.error('Verify Vehicle Error:', err)
+      alert('An error occurred during verification')
+    }
+  }
+
+  const mappedVehicles = useMemo(() => {
+    return vehicles.map(v => ({
+      id: v.id,
+      customerId: v.customerId || 'walk-in',
+      customerName: v.customer?.fullName || v.ownerName || 'Walk-In Customer',
+      plate: v.plateNumber,
+      make: v.make,
+      model: v.model,
+      type: v.vehicleType?.name || 'Car',
+      color: v.color || '—',
+      status: mapStatusToDisplay(v.status),
+      slot: '—', // slots can be resolved if needed
+      lastCheckIn: v.createdAt ? new Date(v.createdAt).toLocaleDateString() : '—',
+      paymentPlan: v.isVerified ? 'Verified Owner' : 'Pending Verification'
+    }))
+  }, [vehicles])
 
   // Extract unique vehicle types from data for filter options
-  const vehicleTypes = ['All', ...new Set(officerVehicles.map((vehicle) => vehicle.type))]
+  const vehicleTypes = useMemo(() => {
+    return ['All', ...new Set(mappedVehicles.map((vehicle) => vehicle.type))]
+  }, [mappedVehicles])
 
   // Filter vehicles based on search, status, and type
   const filteredVehicles = useMemo(() => {
-    return officerVehicles.filter((vehicle) => {
+    return mappedVehicles.filter((vehicle) => {
       const matchesSearch = [
         vehicle.plate,
         vehicle.customerName,
@@ -37,7 +102,7 @@ const VehicleManagementPage = () => {
       const matchesType = typeFilter === 'All' || vehicle.type === typeFilter
       return matchesSearch && matchesStatus && matchesType
     })
-  }, [searchTerm, statusFilter, typeFilter])
+  }, [mappedVehicles, searchTerm, statusFilter, typeFilter])
 
   return (
     <AdminDashboardLayout>
@@ -77,11 +142,10 @@ const VehicleManagementPage = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full rounded-xl border border-gray-200 px-4 py-3 bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none"
             >
-              {vehicleStatusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
+              <option value="All">All</option>
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Suspended">Suspended</option>
             </select>
           </div>
         </div>
@@ -113,16 +177,28 @@ const VehicleManagementPage = () => {
                   <Th>Vehicle</Th>
                   <Th>Customer</Th>
                   <Th>Status</Th>
-                  <Th>Slot</Th>
-                  <Th>Last Check-in</Th>
+                  <Th>Assigned Slot</Th>
+                  <Th>Registered Date</Th>
                   <Th>Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
-                {filteredVehicles.map((vehicle) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                      Loading vehicle directory...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-red-500 font-medium">
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="hover:bg-gray-50/70">
                     <Td>
-                      <p className="font-semibold text-gray-900">{vehicle.plate}</p>
+                      <p className="font-semibold text-gray-900 uppercase">{vehicle.plate}</p>
                       <p className="text-sm text-gray-500">
                         {vehicle.make} {vehicle.model} · {vehicle.color}
                       </p>
@@ -132,7 +208,7 @@ const VehicleManagementPage = () => {
                       <p className="text-sm text-gray-500">{vehicle.paymentPlan}</p>
                     </Td>
                     <Td>
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyles[vehicle.status]}`}>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyles[vehicle.status] || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
                         {vehicle.status}
                       </span>
                     </Td>
@@ -145,15 +221,22 @@ const VehicleManagementPage = () => {
                     </Td>
                     <Td>
                       <div className="flex flex-wrap gap-2">
-                        <button className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                          Update
-                        </button>
-                        <Link
-                          to={`/admin-dashboard/officer/customers/${vehicle.customerId}`}
-                          className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                        >
-                          View Owner
-                        </Link>
+                        {vehicle.status === 'Pending' && (
+                          <button
+                            onClick={() => handleVerify(vehicle.id)}
+                            className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                          >
+                            Verify
+                          </button>
+                        )}
+                        {vehicle.customerId && vehicle.customerId !== 'walk-in' && (
+                          <Link
+                            to={`/admin-dashboard/officer/customers/${vehicle.customerId}`}
+                            className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            View Owner
+                          </Link>
+                        )}
                       </div>
                     </Td>
                   </tr>
@@ -162,7 +245,7 @@ const VehicleManagementPage = () => {
             </table>
           </div>
 
-          {filteredVehicles.length === 0 && (
+          {!loading && !error && filteredVehicles.length === 0 && (
             <div className="py-16 text-center text-gray-500">No vehicles match your search or filters.</div>
           )}
         </div>

@@ -7,15 +7,22 @@ const router = express.Router();
 // GET /api/vehicles
 router.get('/', protect, async (req, res) => {
   try {
+    let where = {};
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
+      where.customerId = req.user.id;
+    }
+
     const vehicles = await prisma.vehicle.findMany({
-      where: { customerId: req.user.id },
+      where,
       include: {
-        vehicleType: true
-      }
+        vehicleType: true,
+        customer: true
+      },
+      orderBy: { createdAt: 'desc' }
     });
     return res.status(200).json(vehicles);
   } catch (error) {
-    console.error('Get User Vehicles Error:', error);
+    console.error('Get Vehicles Error:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -171,6 +178,33 @@ router.delete('/:id', protect, async (req, res) => {
     return res.status(200).json({ success: true, message: 'Vehicle deleted successfully' });
   } catch (error) {
     console.error('Delete Vehicle Error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/vehicles/:id/verify
+router.patch('/:id/verify', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OFFICER') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin or Officer access only' });
+    }
+
+    const { id } = req.params;
+
+    const updatedVehicle = await prisma.vehicle.update({
+      where: { id },
+      data: {
+        status: 'ACTIVE',
+        isVerified: true
+      },
+      include: {
+        vehicleType: true
+      }
+    });
+
+    return res.status(200).json(updatedVehicle);
+  } catch (error) {
+    console.error('Verify Vehicle Error:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });

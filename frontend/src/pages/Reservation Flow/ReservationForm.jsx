@@ -1,14 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { mockVehicles } from '../../data/mockUserData'
 import Navbar from '../../components/Navigation/Navbar'
-import { reservationsAPI } from '../../services/api'
+import { vehiclesAPI } from '../../services/api'
 import Footer from '../../components/Footer/Footer'
+import { useAuth } from '../../context/AuthContext'
 
 const ReservationForm = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const selectedSlot = location.state?.selectedSlot || null
+
+  const [vehicles, setVehicles] = useState([])
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true)
+  const [vehiclesError, setVehiclesError] = useState(null)
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      if (!user) return
+      setIsLoadingVehicles(true)
+      try {
+        const res = await vehiclesAPI.getUserVehicles(user.id)
+        if (res.success && res.data) {
+          setVehicles(res.data)
+        } else {
+          setVehiclesError(res.error || 'Failed to load vehicles')
+        }
+      } catch (err) {
+        setVehiclesError('Failed to load vehicles')
+        console.error(err)
+      } finally {
+        setIsLoadingVehicles(false)
+      }
+    }
+    fetchVehicles()
+  }, [user])
 
   if (!selectedSlot) {
     return (
@@ -86,10 +113,16 @@ const ReservationForm = () => {
     setIsSubmitting(true)
 
     // Calculate pricing
-    const selectedVehicle = mockVehicles.find(v => v.id === parseInt(formData.vehicleId))
+    const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId) || mockVehicles.find(v => v.id === parseInt(formData.vehicleId))
     const duration = parseInt(formData.duration)
     const hourlyRate = selectedSlot.price.hourly
     const totalAmount = hourlyRate * duration
+
+    // Construct backend compatible start/end ISO times
+    const [year, month, day] = formData.checkInDate.split('-')
+    const [hour, minute] = formData.checkInTime.split(':')
+    const startTimeISO = new Date(year, month - 1, day, hour, minute).toISOString()
+    const endTimeISO = new Date(new Date(startTimeISO).getTime() + duration * 60 * 60 * 1000).toISOString()
 
     const reservationData = {
       selectedSlot,
@@ -97,14 +130,13 @@ const ReservationForm = () => {
       selectedVehicle,
       duration,
       totalAmount,
+      startTimeISO,
+      endTimeISO,
       checkOut: calculateCheckOut(formData.checkInDate, formData.checkInTime, duration)
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      navigate('/reservation/confirm', { state: { reservationData } })
-      setIsSubmitting(false)
-    }, 500)
+    navigate('/reservation/confirm', { state: { reservationData } })
+    setIsSubmitting(false)
   }
 
   const calculateCheckOut = (date, time, hours) => {
@@ -255,14 +287,31 @@ const ReservationForm = () => {
                       errors.vehicleId ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                     }`}
                   >
-                    <option value="">Choose a vehicle</option>
-                    {mockVehicles.map(vehicle => (
+                    <option value="">
+                      {isLoadingVehicles ? 'Loading vehicles...' : 'Choose a vehicle'}
+                    </option>
+                    {vehicles.map(vehicle => (
                       <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                        {vehicle.make} {vehicle.model} - {vehicle.plateNumber || vehicle.licensePlate}
                       </option>
                     ))}
+                    {!isLoadingVehicles && vehicles.length === 0 && (
+                      <option disabled>No vehicles registered</option>
+                    )}
                   </select>
                   {errors.vehicleId && <p className="text-red-500 text-sm mt-1">{errors.vehicleId}</p>}
+                  {!isLoadingVehicles && vehicles.length === 0 && (
+                    <div className="mt-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      You have no registered vehicles. You must register at least one vehicle to make a reservation.
+                      <button
+                        type="button"
+                        onClick={() => navigate('/dashboard/vehicles')}
+                        className="ml-2 underline font-semibold text-amber-700 hover:text-amber-800"
+                      >
+                        Register a Vehicle
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Special Requests */}

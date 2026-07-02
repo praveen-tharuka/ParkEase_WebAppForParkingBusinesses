@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { mockUser, mockAdmin, MOCK_CREDENTIALS, MOCK_ADMIN_CREDENTIALS } from '../../data/mockUserData'
+import { authAPI } from '../../services/api'
 import Navbar from '../../components/Navigation/Navbar'
 import Footer from '../../components/Footer/Footer'
 
@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login, logout } = useAuth()
 
@@ -206,30 +207,12 @@ const LoginPage = () => {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full py-3 bg-brand text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors shadow-md"
             >
               Login as {loginType === 'user' ? 'User' : 'Admin'}
             </button>
 
-            {/* Demo Credentials */}
-            <div className={`border rounded-lg p-3 text-sm ${
-              loginType === 'user'
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-purple-50 border-purple-200 text-purple-700'
-            }`}>
-              <p className="font-semibold">Demo Credentials:</p>
-              {loginType === 'user' ? (
-                <>
-                  <p>Email: praveen@parkease.com | Password: password123</p>
-                  <p className="mt-1 text-xs">Or use username: praveen</p>
-                </>
-              ) : (
-                <>
-                  <p>Email: admin@parkease.com | Password: admin123</p>
-                  <p className="mt-1 text-xs">Or use username: admin</p>
-                </>
-              )}
-            </div>
           </form>
 
           {loginType === 'user' && (
