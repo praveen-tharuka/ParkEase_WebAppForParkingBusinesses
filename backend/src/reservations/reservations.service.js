@@ -219,7 +219,8 @@ async function listReservations({ customerId, status }) {
           location: true
         }
       },
-      vehicle: true
+      vehicle: true,
+      customer: true
     },
     orderBy: { createdAt: 'desc' },
   });

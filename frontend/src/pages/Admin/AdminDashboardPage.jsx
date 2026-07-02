@@ -1,7 +1,32 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import AdminDashboardLayout from '../../components/Admin/AdminDashboardLayout'
+import api from '../../services/api'
+
+const { reportsAPI } = api
 
 const AdminDashboardPage = () => {
+  const [stats, setStats] = useState({
+    availableSlots: 0,
+    totalSlots: 0,
+    activeBookings: 0,
+    todayRevenue: 0
+  })
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await reportsAPI.getOverview()
+        if (response.success && response.data) {
+          setStats(response.data)
+        }
+      } catch (err) {
+        console.error('Fetch dashboard stats error:', err)
+      }
+    }
+    fetchStats()
+  }, [])
+
   return (
     <AdminDashboardLayout>
       <div className="space-y-8">
@@ -10,19 +35,19 @@ const AdminDashboardPage = () => {
           <p className="text-gray-500 mt-2">Manage your parking business operations.</p>
         </div>
 
-        {/* Quick Stats Summary - Placeholder */}
+        {/* Quick Stats Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
             <h3 className="text-gray-500 text-sm font-medium">Available Slots</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">42 <span className="text-sm font-normal text-gray-500">/ 100</span></p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{stats.availableSlots} <span className="text-sm font-normal text-gray-500">/ {stats.totalSlots}</span></p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
             <h3 className="text-gray-500 text-sm font-medium">Active Bookings</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">58</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeBookings}</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
             <h3 className="text-gray-500 text-sm font-medium">Today's Revenue</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">$340.00</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">LKR {Number(stats.todayRevenue || 0).toFixed(2)}</p>
           </div>
         </div>
 
@@ -50,12 +75,6 @@ const AdminDashboardPage = () => {
             description="Search the full customer list with filters and statuses."
             to="/admin-dashboard/officer/customers"
             icon="users"
-          />
-          <QuickLinkCard
-            title="Customer Details"
-            description="Open a customer profile, history, and linked vehicles."
-            to="/admin-dashboard/officer/customers/CUS-1001"
-            icon="profile"
           />
           <QuickLinkCard
             title="Vehicle Management"
