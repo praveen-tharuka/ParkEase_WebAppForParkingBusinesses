@@ -1,15 +1,94 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import AdminDashboardLayout from '../../components/Admin/AdminDashboardLayout'
-import { mockBookings } from '../../data/mockBookings'
+import api from '../../services/api'
+
+const { reservationsAPI } = api
 
 const ManageBookingsPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
   const [filterPaymentStatus, setFilterPaymentStatus] = useState('All')
   const [sortBy, setSortBy] = useState('bookingDate')
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const fetchBookings = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await reservationsAPI.listReservations()
+      if (response.success && response.data) {
+        // listReservations returns { success: true, count: N, data: [...] }
+        const rawBookings = response.data.data || response.data || []
+        setBookings(rawBookings)
+      } else {
+        setError(response.error || 'Failed to load bookings directory')
+      }
+    } catch (err) {
+      console.error('Fetch Bookings Error:', err)
+      setError('An error occurred while loading bookings')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const handleCancelBooking = async (id) => {
+    const reason = window.prompt('Enter cancellation reason:')
+    if (reason === null) return
+    try {
+      const response = await reservationsAPI.cancelReservation(id, reason)
+      if (response.success) {
+        alert('Booking cancelled successfully')
+        fetchBookings()
+      } else {
+        alert(response.error || 'Failed to cancel booking')
+      }
+    } catch (err) {
+      console.error('Cancel Booking Error:', err)
+      alert('An error occurred while cancelling booking')
+    }
+  }
+
+  const mappedBookings = useMemo(() => {
+    return bookings.map(b => {
+      const isPaid = b.status === 'COMPLETED' || b.payments?.some(p => p.paymentStatus === 'PAID')
+      
+      const startTimeStr = new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const endTimeStr = new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      
+      let displayStatus = 'Pending'
+      if (b.status === 'CONFIRMED' || b.status === 'CHECKED_IN') displayStatus = 'Active'
+      if (b.status === 'COMPLETED') displayStatus = 'Completed'
+      if (b.status === 'CANCELLED') displayStatus = 'Cancelled'
+
+      return {
+        id: b.reservationCode || b.id,
+        dbId: b.id,
+        customerId: b.customerId,
+        customerName: b.customer?.fullName || 'Walk-In Customer',
+        customerEmail: b.customer?.email || '—',
+        slotNumber: b.slot?.slotNumber || '—',
+        slotLocation: b.slot?.location?.name || 'Downtown',
+        vehiclePlate: b.vehicle?.plateNumber || '—',
+        vehicleType: b.vehicle?.vehicleType?.name || 'Car',
+        bookingDate: new Date(b.createdAt || b.startTime).toLocaleDateString(),
+        checkInTime: startTimeStr,
+        checkOutTime: endTimeStr,
+        status: displayStatus,
+        paymentStatus: isPaid ? 'Paid' : 'Pending',
+        price: Number(b.totalFee || 0),
+        notes: b.notes || '—'
+      }
+    })
+  }, [bookings])
 
   const filteredBookings = useMemo(() => {
-    let result = mockBookings
+    let result = mappedBookings
 
     // Filter by status
     if (filterStatus !== 'All') {
@@ -45,12 +124,12 @@ const ManageBookingsPage = () => {
           return (b.price || 0) - (a.price || 0)
         case 'bookingDate':
         default:
-          return new Date(b.bookingDate) - new Date(a.bookingDate)
+          return new Date(a.bookingDate) - new Date(b.bookingDate)
       }
     })
 
     return result
-  }, [searchTerm, filterStatus, filterPaymentStatus, sortBy])
+  }, [mappedBookings, searchTerm, filterStatus, filterPaymentStatus, sortBy])
 
   const getStatusBadgeColor = status => {
     switch (status) {
@@ -170,7 +249,19 @@ const ManageBookingsPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredBookings.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                      Loading bookings...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-8 text-center text-red-500 font-semibold">
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredBookings.length > 0 ? (
                   filteredBookings.map(booking => (
                     <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -181,7 +272,7 @@ const ManageBookingsPage = () => {
                         <div className="text-xs text-gray-500">{booking.customerEmail}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{booking.vehiclePlate}</div>
+                        <div className="text-sm text-gray-900 uppercase">{booking.vehiclePlate}</div>
                         <div className="text-xs text-gray-500">{booking.vehicleType}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -206,12 +297,19 @@ const ManageBookingsPage = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">${booking.price ? booking.price.toFixed(2) : 'N/A'}</span>
+                        <span className="text-sm font-medium text-gray-900">LKR {booking.price ? booking.price.toFixed(2) : '0.00'}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="text-brand hover:text-brand-dark transition-colors mr-3">View</button>
                         {booking.status === 'Active' && (
-                          <button className="text-red-600 hover:text-red-700 transition-colors">Cancel</button>
+                          <button
+                            onClick={() => handleCancelBooking(booking.dbId)}
+                            className="text-red-600 hover:text-red-700 transition-colors font-medium"
+                          >
+                            Cancel Booking
+                          </button>
+                        )}
+                        {booking.status !== 'Active' && (
+                          <span className="text-gray-400 italic">No actions</span>
                         )}
                       </td>
                     </tr>

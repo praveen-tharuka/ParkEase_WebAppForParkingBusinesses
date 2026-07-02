@@ -14,6 +14,8 @@ const reservationsRoutes = require('./reservations/reservations.routes');
 const walkinRoutes = require('./routes/walkinRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
+const approvalRoutes = require('./routes/approvalRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +42,8 @@ app.use('/api/reservations', reservationsRoutes);
 app.use('/api/walkins', walkinRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/reservations', ticketRoutes);
+app.use('/api/approvals', approvalRoutes);
+app.use('/api/reports', reportRoutes);
 
 // 404 handler
 app.use((req, res) => {

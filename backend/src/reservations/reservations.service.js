@@ -203,7 +203,7 @@ async function listReservations({ customerId, status }) {
 
   return prisma.reservation.findMany({
     where,
-    include: { slot: true, vehicle: true },
+    include: { slot: true, vehicle: true, customer: true },
     orderBy: { createdAt: 'desc' },
   });
 }

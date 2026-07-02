@@ -326,6 +326,14 @@ export const vehiclesAPI = {
 // USERS ENDPOINTS
 // ============================================
 export const usersAPI = {
+  listUsers: async (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return apiCall(`/users?${queryParams}`, {
+      method: 'GET',
+      requiresAuth: true,
+    });
+  },
+
   getUserProfile: async (userId) => {
     return apiCall(`/users/${userId}`, {
       method: 'GET',
