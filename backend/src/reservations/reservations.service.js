@@ -192,7 +192,17 @@ async function createReservation({ customerId, slotId, vehicleId, startTime, end
 async function getReservationById(id) {
   return prisma.reservation.findUnique({
     where: { id },
-    include: { slot: true, vehicle: true, customer: true, ticket: true, payments: true },
+    include: { 
+      slot: {
+        include: {
+          location: true
+        }
+      }, 
+      vehicle: true, 
+      customer: true, 
+      ticket: true, 
+      payments: true 
+    },
   });
 }
 
@@ -203,7 +213,14 @@ async function listReservations({ customerId, status }) {
 
   return prisma.reservation.findMany({
     where,
-    include: { slot: true, vehicle: true },
+    include: {
+      slot: {
+        include: {
+          location: true
+        }
+      },
+      vehicle: true
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

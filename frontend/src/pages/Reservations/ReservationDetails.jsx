@@ -16,7 +16,8 @@ const ReservationDetails = () => {
     try {
       const response = await api.reservationsAPI.getReservationById(id);
       if (response.success) {
-        setReservation(response.data);
+        const resData = response.data?.data || response.data;
+        setReservation(resData);
       } else {
         setError(response.error || 'Failed to fetch reservation details.');
       }
