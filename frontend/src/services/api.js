@@ -48,11 +48,18 @@ async function apiCall(endpoint, options = {}) {
 
     clearTimeout(timeoutId)
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`)
+    let data = null
+    try {
+      data = await response.json()
+    } catch (e) {
+      // Response was not JSON
     }
 
-    const data = await response.json()
+    if (!response.ok) {
+      const errMsg = data?.message || data?.error || response.statusText
+      throw new Error(errMsg)
+    }
+
     return { success: true, data }
   } catch (error) {
     console.error(`API Call Failed: ${endpoint}`, error)

@@ -14,6 +14,7 @@ async function createReservation(req, res) {
     });
     res.status(201).json({ success: true, data: reservation });
   } catch (err) {
+    console.error('Create Reservation Error in Controller:', err);
     res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 }

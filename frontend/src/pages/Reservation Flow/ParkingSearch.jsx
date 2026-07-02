@@ -22,8 +22,19 @@ const ParkingSearch = () => {
       setApiError(null)
       try {
         const response = await slotsAPI.searchSlots({}) // no filters initially
-        if (response.success) {
-          setSlots(response.data)
+        if (response.success && response.data) {
+          const mappedSlots = response.data.map(slot => ({
+            id: slot.id,
+            slotNumber: slot.slotNumber,
+            type: slot.supportedVehicleType?.name || (slot.slotType === 'REGULAR' ? 'Car' : slot.slotType),
+            location: slot.location?.name || 'Unknown Location',
+            price: {
+              hourly: slot.price?.hourly || 5,
+              daily: slot.price?.daily || 40,
+            },
+            available: slot.status === 'AVAILABLE',
+          }))
+          setSlots(mappedSlots)
         } else {
           setApiError('Failed to load slots')
           setSlots(mockSlots) // fallback to mock data
